@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio CMS - Project Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #dee2e6;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            height: calc(100vh - 140px);
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+
+        .map-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-title {
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .links-container {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            background: #f8f9fa;
+        }
+
+        .link-item {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            align-items: center;
+        }
+
+        .link-item input {
+            margin-bottom: 0;
+        }
+
+        .link-item button {
+            padding: 6px;
+            width: auto;
+            min-width: auto;
+        }
+
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+
+        .upload-area.dragover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+
+        .media-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .media-item {
+            position: relative;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .media-item img,
+        .media-item video {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+        }
+
+        .media-item .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .coordinate-picker {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #000;
+            min-height: 400px;
+        }
+
+        .background-image {
+            width: 150%;
+            height: 150%;
+            object-fit: contain;
+            object-position: center center;
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .hotspot-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .current-hotspot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #007bff;
+            background: rgba(0, 123, 255, 0.9);
+            border-radius: 50%;
+            pointer-events: none;
+            display: none;
+            transform: translate(-50%, -50%);
+            box-shadow: 
+                0 4px 12px rgba(0, 123, 255, 0.3),
+                0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .current-hotspot::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.9;
+        }
+
+        .current-hotspot.visible {
+            display: block;
+        }
+
+        .coordinate-info {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .coordinate-info div {
+            margin: 0.25rem 0;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert.error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+        }
+
+        .alert.success {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #363;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top-color: #007bff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 1200px) {
+            .editor-grid {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .map-section {
+                height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .editor-grid {
+                gap: 1rem;
+            }
+
+            .form-section,
+            .map-section {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 id="pageTitle">New Project</h1>
+        <div class="header-actions">
+            <a href="/admin/dashboard" class="btn btn-secondary">← Back to Dashboard</a>
+            <button id="previewBtn" class="btn btn-secondary">👁️ Preview</button>
+            <button id="saveBtn" class="btn btn-success">💾 Save Project</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div id="alert" class="alert"></div>
+        <div id="loading" class="loading">
+            <span class="loading-spinner"></span>
+            Loading project data...
+        </div>
+
+        <div id="editorContent" class="editor-grid" style="display: none;">
+            <!-- Form Section -->
+            <div class="form-section">
+                <h2 class="section-title">Project Details</h2>
+                
+                <form id="projectForm">
+                    <div class="form-group">
+                        <label for="title">Project Title *</label>
+                        <input type="text" id="title" name="title" required placeholder="Enter project title">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" placeholder="Enter project description" rows="4"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Project Links</label>
+                        <div class="links-container">
+                            <div id="linksContainer">
+                                <!-- Links will be added dynamically -->
+                            </div>
+                            <button type="button" id="addLinkBtn" class="btn btn-secondary btn-small">+ Add Link</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Media Upload</label>
+                        <div class="upload-area" id="uploadArea">
+                            <p>📁 Drop files here or click to upload</p>
+                            <p style="font-size: 12px; color: #666; margin-top: 0.5rem;">
+                                Supported: Images (JPG, PNG, WebP) and Videos (MP4, WebM)
+                            </p>
+                            <input type="file" id="fileInput" style="display: none;" multiple accept="image/*,video/*">
+                        </div>
+                        <div id="mediaPreview" class="media-preview"></div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Map Section -->
+            <div class="map-section">
+                <h2 class="section-title">Hotspot Position</h2>
+                <p style="margin-bottom: 1rem; color: #666; font-size: 14px;">
+                    Click on the map to position your project hotspot
+                </p>
+                
+                <div class="coordinate-picker" id="coordinatePicker">
+                    <img src="/assets/images/TM-world.png" alt="Portfolio Map" class="background-image" id="backgroundImage">
+                    <div class="hotspot-overlay">
+                        <div class="current-hotspot" id="currentHotspot"></div>
+                    </div>
+                </div>
+
+                <div class="coordinate-info" id="coordinateInfo">
+                    <div><strong>Hotspot Coordinates:</strong></div>
+                    <div>X: <span id="coordX">0.5</span> (0 = left, 1 = right)</div>
+                    <div>Y: <span id="coordY">0.5</span> (0 = top, 1 = bottom)</div>
+                    <div><em>Hotspot size: Fixed 20px circular button</em></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ProjectEditor {
+            constructor() {
+                this.projectId = null;
+                this.coordinates = { x: 0.5, y: 0.5, w: 0.1, h: 0.1 }; // w,h kept for API compatibility
+                this.links = [];
+                this.uploadedMedia = [];
+                this.isEditing = false;
+                this.imageRect = { width: 0, height: 0, offsetX: 0, offsetY: 0, containerWidth: 0, containerHeight: 0 };
+                
+                this.init();
+            }
+
+            async init() {
+                try {
+                    await this.checkAuth();
+                    this.setupEventListeners();
+                    
+                    // Check if editing existing project
+                    const urlParams = new URLSearchParams(window.location.search);
+                    this.projectId = urlParams.get('id');
+                    
+                    if (this.projectId) {
+                        await this.loadProject(this.projectId);
+                        document.getElementById('pageTitle').textContent = 'Edit Project';
+                        this.isEditing = true;
+                    } else {
+                        this.addEmptyLink();
+                    }
+                    
+                    this.updateCoordinateDisplay();
+                    this.showEditor();
+                } catch (error) {
+                    console.error('Editor initialization failed:', error);
+                    this.showAlert('Failed to load editor', 'error');
+                }
+            }
+
+            async checkAuth() {
+                const response = await fetch('/api/auth/status');
+                const data = await response.json();
+                
+                if (!data.authenticated) {
+                    window.location.href = '/admin';
+                    return;
+                }
+            }
+
+            async loadProject(projectId) {
+                try {
+                    const response = await fetch(`/api/projects/${projectId}`);
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.message);
+                    }
+                    
+                    const project = data.data;
+                    
+                    // Fill form fields
+                    document.getElementById('title').value = project.title;
+                    document.getElementById('description').value = project.description || '';
+                    
+                    // Load links
+                    this.links = project.links || [];
+                    this.renderLinks();
+                    
+                    // Load coordinates
+                    if (project.coordinates) {
+                        this.coordinates = { ...project.coordinates };
+                        this.updateHotspotDisplay();
+                    }
+                    
+                    // TODO: Load media files
+                    
+                } catch (error) {
+                    console.error('Failed to load project:', error);
+                    this.showAlert('Failed to load project data', 'error');
+                }
+            }
+
+            setupEventListeners() {
+                // Save button
+                document.getElementById('saveBtn').addEventListener('click', this.saveProject.bind(this));
+                
+                // Add link button
+                document.getElementById('addLinkBtn').addEventListener('click', this.addEmptyLink.bind(this));
+                
+                // File upload
+                const uploadArea = document.getElementById('uploadArea');
+                const fileInput = document.getElementById('fileInput');
+                
+                uploadArea.addEventListener('click', () => fileInput.click());
+                uploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
+                uploadArea.addEventListener('drop', this.handleDrop.bind(this));
+                fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+                
+                // Coordinate picker
+                const coordinatePicker = document.getElementById('coordinatePicker');
+                coordinatePicker.addEventListener('click', this.handleMapClick.bind(this));
+                
+                // Background image load
+                const backgroundImage = document.getElementById('backgroundImage');
+                backgroundImage.addEventListener('load', () => {
+                    this.updateImageRect();
+                    this.updateHotspotDisplay();
+                });
+                
+                // Window resize handler
+                window.addEventListener('resize', () => {
+                    this.updateImageRect();
+                    this.updateHotspotDisplay();
+                });
+            }
+
+            handleMapClick(e) {
+                const picker = e.currentTarget;
+                const rect = picker.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+                
+                // Convert click position to normalized coordinates within the actual image area
+                const { offsetX, offsetY, width, height } = this.imageRect;
+                
+                // Check if click is within the image area
+                const imageX = clickX - offsetX;
+                const imageY = clickY - offsetY;
+                
+                if (imageX >= 0 && imageX <= width && imageY >= 0 && imageY <= height) {
+                    // Normalize to 0-1 range within the image
+                    const normalizedX = imageX / width;
+                    const normalizedY = imageY / height;
+                    
+                    // Position the circular hotspot center at the click point
+                    this.coordinates.x = Math.max(0, Math.min(1, normalizedX));
+                    this.coordinates.y = Math.max(0, Math.min(1, normalizedY));
+                    
+                    this.updateHotspotDisplay();
+                    this.updateCoordinateDisplay();
+                }
+            }
+
+            updateImageRect() {
+                const backgroundImage = document.getElementById('backgroundImage');
+                const container = backgroundImage.parentElement;
+                const containerRect = container.getBoundingClientRect();
+                const cw = containerRect.width;
+                const ch = containerRect.height;
+                
+                // Get natural image dimensions
+                const iw = backgroundImage.naturalWidth || 1;
+                const ih = backgroundImage.naturalHeight || 1;
+                
+                // Calculate displayed size with object-fit: contain at 150% size (matching homepage)
+                const scale = Math.min(cw / iw, ch / ih) * 1.5; // 150% sizing for camera movement space
+                const dw = iw * scale;
+                const dh = ih * scale;
+                const offsetX = (cw - dw) / 2;
+                const offsetY = (ch - dh) / 2;
+                
+                this.imageRect = {
+                    width: dw,
+                    height: dh,
+                    offsetX: offsetX,
+                    offsetY: offsetY,
+                    containerWidth: cw,
+                    containerHeight: ch
+                };
+            }
+            
+            updateHotspotDisplay() {
+                const hotspot = document.getElementById('currentHotspot');
+                
+                if (this.imageRect.width === 0 || this.imageRect.height === 0) {
+                    // Image not loaded yet
+                    return;
+                }
+                
+                const { x, y, w, h } = this.coordinates;
+                const { width, height, offsetX, offsetY } = this.imageRect;
+                
+                // Calculate position within the image area (matching homepage approach)
+                // Position the center of the circular hotspot at the coordinate
+                const left = offsetX + (x * width);
+                const top = offsetY + (y * height);
+                
+                hotspot.style.left = `${left}px`;
+                hotspot.style.top = `${top}px`;
+                hotspot.classList.add('visible');
+            }
+
+            updateCoordinateDisplay() {
+                document.getElementById('coordX').textContent = this.coordinates.x.toFixed(3);
+                document.getElementById('coordY').textContent = this.coordinates.y.toFixed(3);
+            }
+
+            addEmptyLink() {
+                this.links.push({ text: '', url: '' });
+                this.renderLinks();
+            }
+
+            removeLink(index) {
+                this.links.splice(index, 1);
+                this.renderLinks();
+            }
+
+            renderLinks() {
+                const container = document.getElementById('linksContainer');
+                
+                container.innerHTML = this.links.map((link, index) => `
+                    <div class="link-item">
+                        <input type="text" placeholder="Link text" value="${this.escapeHtml(link.text)}" 
+                               onchange="editor.updateLink(${index}, 'text', this.value)">
+                        <input type="url" placeholder="URL" value="${this.escapeHtml(link.url)}" 
+                               onchange="editor.updateLink(${index}, 'url', this.value)">
+                        <button type="button" class="btn btn-danger btn-small" onclick="editor.removeLink(${index})">×</button>
+                    </div>
+                `).join('');
+            }
+
+            updateLink(index, field, value) {
+                if (this.links[index]) {
+                    this.links[index][field] = value;
+                }
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+                e.currentTarget.classList.add('dragover');
+            }
+
+            handleDrop(e) {
+                e.preventDefault();
+                e.currentTarget.classList.remove('dragover');
+                
+                const files = Array.from(e.dataTransfer.files);
+                this.uploadFiles(files);
+            }
+
+            handleFileSelect(e) {
+                const files = Array.from(e.target.files);
+                this.uploadFiles(files);
+            }
+
+            async uploadFiles(files) {
+                const validFiles = files.filter(file => {
+                    return file.type.startsWith('image/') || file.type.startsWith('video/');
+                });
+
+                if (validFiles.length === 0) {
+                    this.showAlert('Please select valid image or video files', 'error');
+                    return;
+                }
+
+                for (const file of validFiles) {
+                    try {
+                        await this.uploadSingleFile(file);
+                    } catch (error) {
+                        console.error('Upload failed:', error);
+                        this.showAlert(`Failed to upload ${file.name}`, 'error');
+                    }
+                }
+            }
+
+            async uploadSingleFile(file) {
+                const formData = new FormData();
+                formData.append('files', file);
+
+                const response = await fetch('/api/upload/multiple', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    this.uploadedMedia.push(...data.data);
+                    this.renderMediaPreview();
+                    this.showAlert(`${file.name} uploaded successfully`, 'success');
+                } else {
+                    throw new Error(data.message);
+                }
+            }
+
+            renderMediaPreview() {
+                const container = document.getElementById('mediaPreview');
+                
+                container.innerHTML = this.uploadedMedia.map((media, index) => {
+                    const isImage = media.original.mimetype.startsWith('image/');
+                    const url = media.thumbnail?.url || media.original.url;
+                    
+                    return `
+                        <div class="media-item">
+                            ${isImage ? 
+                                `<img src="${url}" alt="Media preview">` :
+                                `<video src="${media.original.url}" muted></video>`
+                            }
+                            <button class="remove-btn" onclick="editor.removeMedia(${index})" title="Remove">×</button>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            removeMedia(index) {
+                this.uploadedMedia.splice(index, 1);
+                this.renderMediaPreview();
+            }
+
+            async saveProject() {
+                try {
+                    const formData = {
+                        title: document.getElementById('title').value.trim(),
+                        description: document.getElementById('description').value.trim(),
+                        links: this.links.filter(link => link.text && link.url),
+                        coordinates: this.coordinates,
+                        image_url: this.uploadedMedia.find(m => m.original.mimetype.startsWith('image/'))?.optimized?.url || this.uploadedMedia.find(m => m.original.mimetype.startsWith('image/'))?.original.url || '',
+                        video_url: this.uploadedMedia.find(m => m.original.mimetype.startsWith('video/'))?.original.url || ''
+                    };
+
+                    if (!formData.title) {
+                        this.showAlert('Project title is required', 'error');
+                        return;
+                    }
+
+                    const url = this.isEditing ? `/api/projects/${this.projectId}` : '/api/projects';
+                    const method = this.isEditing ? 'PUT' : 'POST';
+
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.showAlert(`Project ${this.isEditing ? 'updated' : 'created'} successfully!`, 'success');
+                        
+                        // Redirect to dashboard after short delay
+                        setTimeout(() => {
+                            window.location.href = '/admin/dashboard';
+                        }, 1500);
+                    } else {
+                        this.showAlert(data.message || 'Failed to save project', 'error');
+                    }
+
+                } catch (error) {
+                    console.error('Save failed:', error);
+                    this.showAlert('Failed to save project', 'error');
+                }
+            }
+
+            showEditor() {
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('editorContent').style.display = 'grid';
+            }
+
+            showAlert(message, type = 'info') {
+                const alert = document.getElementById('alert');
+                alert.textContent = message;
+                alert.className = `alert ${type} show`;
+                
+                setTimeout(() => {
+                    alert.classList.remove('show');
+                }, 5000);
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize editor
+        let editor;
+        document.addEventListener('DOMContentLoaded', () => {
+            editor = new ProjectEditor();
+        });
+
+        // Handle window resize for coordinate picker
+        window.addEventListener('resize', () => {
+            if (editor) {
+                editor.updateHotspotDisplay();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+[
+  {
+    "id": "6",
+    "title": "Test",
+    "description": "test updated",
+    "links": [],
+    "region": {
+      "x": 0.8565873473338481,
+      "y": 0.26155042694174324,
+      "w": 0.1,
+      "h": 0.1
+    },
+    "image_url": "/uploads/images/files-1767860535096-218271435-optimized.webp",
+    "video_url": ""
+  },
+  {
+    "id": "1",
+    "title": "Stadium Complex",
+    "description": "A modern sports stadium featuring advanced architecture and sustainable design. This project showcases our expertise in large-scale entertainment venues with crowd management and acoustics optimization.",
+    "links": [
+      {
+        "text": "Live Demo",
+        "url": "https://example.com/stadium"
+      },
+      {
+        "text": "GitHub",
+        "url": "https://github.com/username/stadium"
+      }
+    ],
+    "region": {
+      "x": 0.4632828738724398,
+      "y": 0.5098027912671484,
+      "w": 0.35,
+      "h": 0.35
+    },
+    "image_url": "",
+    "video_url": ""
+  },
+  {
+    "id": "2",
+    "title": "Smart Highway System",
+    "description": "An intelligent transportation network featuring automated traffic management, real-time monitoring, and sustainable energy solutions. Integration with IoT sensors and AI-powered optimization.",
+    "links": [
+      {
+        "text": "Case Study",
+        "url": "https://example.com/highway"
+      },
+      {
+        "text": "Documentation",
+        "url": "https://docs.example.com/highway"
+      }
+    ],
+    "region": {
+      "x": 0.3812094451568508,
+      "y": 0.33325072130552463,
+      "w": 0.7,
+      "h": 0.25
+    },
+    "image_url": "",
+    "video_url": ""
+  },
+  {
+    "id": "3",
+    "title": "Solar Energy Field",
+    "description": "Renewable energy installation with cutting-edge photovoltaic technology. Features smart grid integration, energy storage solutions, and environmental impact monitoring systems.",
+    "links": [
+      {
+        "text": "Project Details",
+        "url": "https://example.com/solar"
+      },
+      {
+        "text": "Sustainability Report",
+        "url": "https://example.com/solar-report"
+      }
+    ],
+    "region": {
+      "x": 0.6241899906964237,
+      "y": 0.38670226542234654,
+      "w": 0.25,
+      "h": 0.25
+    },
+    "image_url": "",
+    "video_url": ""
+  }
+]

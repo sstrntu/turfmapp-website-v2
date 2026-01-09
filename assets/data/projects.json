@@ -1,0 +1,42 @@
+{
+    "project1": {
+        "title": "E-Commerce Platform",
+        "description": "Full-stack online shopping platform with payment integration, user authentication, and admin dashboard. Features include product catalog, shopping cart, order management, and real-time inventory tracking.",
+        "tech": ["React", "Node.js", "MongoDB", "Stripe", "JWT"],
+        "liveUrl": "https://example-ecommerce.com",
+        "githubUrl": "https://github.com/username/ecommerce-platform",
+        "coordinates": { "x": "15%", "y": "20%" }
+    },
+    "project2": {
+        "title": "Weather Dashboard",
+        "description": "Real-time weather application with geolocation, 7-day forecasts, interactive maps, and severe weather alerts. Includes data visualization and historical weather patterns.",
+        "tech": ["Vue.js", "OpenWeather API", "Chart.js", "Mapbox"],
+        "liveUrl": "https://example-weather.com",
+        "githubUrl": "https://github.com/username/weather-dashboard",
+        "coordinates": { "x": "60%", "y": "35%" }
+    },
+    "project3": {
+        "title": "Task Management App",
+        "description": "Collaborative project management tool with real-time updates, file sharing, team chat, and advanced analytics. Supports agile workflows and team productivity tracking.",
+        "tech": ["Angular", "Firebase", "WebSocket", "TypeScript"],
+        "liveUrl": "https://example-tasks.com",
+        "githubUrl": "https://github.com/username/task-manager",
+        "coordinates": { "x": "25%", "y": "65%" }
+    },
+    "project4": {
+        "title": "AI Image Generator",
+        "description": "Machine learning powered image generation tool with custom training models, style transfer, and batch processing capabilities. Features advanced AI algorithms for creative content.",
+        "tech": ["Python", "TensorFlow", "Flask", "AWS", "Docker"],
+        "liveUrl": "https://example-ai-images.com",
+        "githubUrl": "https://github.com/username/ai-image-generator",
+        "coordinates": { "x": "80%", "y": "75%" }
+    },
+    "project5": {
+        "title": "Social Media Analytics",
+        "description": "Comprehensive data visualization platform for social media metrics with predictive analytics, sentiment analysis, and competitor tracking. Provides actionable insights for marketing teams.",
+        "tech": ["D3.js", "Python", "PostgreSQL", "Docker", "Redis"],
+        "liveUrl": "https://example-analytics.com",
+        "githubUrl": "https://github.com/username/social-analytics",
+        "coordinates": { "x": "45%", "y": "45%" }
+    }
+}

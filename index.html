@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<!--
+Big World Map Camera System
+===========================
+
+Camera system for exploring a large world map (TM-world.png).
+
+Features:
+- 12.5% zoom into the center of the map initially
+- Camera panning controls (up/down/left/right movement)
+- Single layer - no parallax for now
+- Smooth camera movement with mouse/touch drag
+- Edge movement when cursor approaches screen edges
+- Tooltip system for interactive elements
+
+Camera Controls:
+- Starts zoomed 12.5% into center of map
+- Mouse/Touch drag to pan camera around the world
+- Move cursor to screen edges for automatic camera movement
+- Smooth interpolation for premium feel
+
+Debug Mode: Press 'D' to show camera position
+-->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GT7-Style Interactive Portfolio</title>
+    <style>
+        /* CSS Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+
+        /* Hero Container - Full viewport with perspective */
+        .hero-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            perspective: 1200px;
+            perspective-origin: center center;
+            overflow: hidden;
+        }
+
+        .parallax-scene {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            will-change: transform;
+            background: #000;
+            cursor: grab;
+        }
+
+        .parallax-scene.tooltip-active {
+            cursor: default;
+        }
+
+        /* Individual layer containers */
+        .parallax-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            will-change: transform;
+        }
+
+        .background-layer {
+            z-index: 1;
+        }
+
+        .structures-layer {
+            z-index: 2;
+        }
+
+        /* World map styling for camera system */
+        .world-layer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: center center;
+            will-change: transform;
+        }
+
+        .world-image {
+            display: block;
+            max-width: none;
+            max-height: none;
+            pointer-events: none;
+        }
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        /* Hotspots container - moves with the map */
+        .hotspots-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            transform: translate(-50%, -50%) scale(2); /* Match image scale */
+            transform-origin: center center;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        /* GT7-Style Hotspot Styling */
+        .hotspot {
+            position: absolute;
+            background: radial-gradient(circle, rgba(0, 150, 255, 0.8) 0%, rgba(0, 150, 255, 0.4) 70%, transparent 100%);
+            border: 2px solid rgba(0, 150, 255, 0.6);
+            cursor: pointer;
+            pointer-events: auto;
+            border-radius: 50%;
+            width: 24px !important;
+            height: 24px !important;
+            padding: 4px;
+            box-sizing: border-box;
+
+            /* GT7-style glow effect */
+            box-shadow:
+                0 0 12px rgba(0, 150, 255, 0.3),
+                0 0 24px rgba(0, 150, 255, 0.1);
+
+            /* Subtle pulse animation for GT7 feel */
+            animation: gt7-pulse 2s ease-in-out infinite;
+            /* Prevent any layout shifts */
+            will-change: background;
+            contain: layout style;
+        }
+
+        .hotspot:hover,
+        .hotspot:focus {
+            background: rgba(0, 150, 255, 0.15);
+            outline: none;
+            z-index: 5;
+            /* Bring to front on hover */
+        }
+
+        /* Add a slightly larger hover detection area */
+        .hotspot::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border-radius: 50%;
+            pointer-events: auto;
+            z-index: -1;
+        }
+
+        .hotspot::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 12px;
+            height: 12px;
+            background: rgba(0, 150, 255, 0.9);
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulse 2s infinite;
+        }
+
+        .hotspot:hover::after {
+            animation: none;
+            background: rgba(0, 150, 255, 1);
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 0 8px rgba(0, 150, 255, 0.6);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.3);
+                opacity: 0.7;
+            }
+        }
+
+        /* Debug mode styles */
+        .debug-mode .hotspot {
+            border: 2px solid red;
+            background: rgba(255, 0, 0, 0.2);
+        }
+
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .debug-mode .debug-info {
+            display: block;
+        }
+
+        .debug-label {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: red;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .debug-mode .debug-label {
+            display: block;
+        }
+
+        /* Edge movement zones (debug mode only) */
+        .edge-zone {
+            position: fixed;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px dashed rgba(255, 0, 0, 0.3);
+            pointer-events: none;
+            z-index: 999;
+            display: none;
+        }
+
+        .debug-mode .edge-zone {
+            display: block;
+        }
+
+        /* Hotspot Buttons */
+        .hotspot {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            background: rgba(0, 123, 255, 0.9);
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 4px 12px rgba(0, 123, 255, 0.3),
+                0 2px 6px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        .hotspot:hover {
+            transform: scale(1.3);
+            background: rgba(0, 123, 255, 1);
+            border-color: rgba(255, 255, 255, 1);
+            box-shadow: 
+                0 6px 20px rgba(0, 123, 255, 0.5),
+                0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: none;
+        }
+
+        .hotspot:active {
+            transform: scale(1.1);
+        }
+
+        .hotspot::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.9;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                box-shadow: 
+                    0 4px 12px rgba(0, 123, 255, 0.3),
+                    0 2px 6px rgba(0, 0, 0, 0.2),
+                    0 0 0 0 rgba(0, 123, 255, 0.4);
+            }
+            50% { 
+                box-shadow: 
+                    0 4px 12px rgba(0, 123, 255, 0.3),
+                    0 2px 6px rgba(0, 0, 0, 0.2),
+                    0 0 0 8px rgba(0, 123, 255, 0.1);
+            }
+        }
+
+        .hotspots-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .hotspots-overlay .hotspot {
+            pointer-events: auto;
+        }
+
+        /* Tooltip Styles */
+        .tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 0;
+            max-width: 280px;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.8) translateY(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+        }
+
+        .tooltip-content {
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .tooltip-image {
+            width: 100%;
+            overflow: hidden;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .tooltip-image img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .tooltip-body {
+            padding: 16px;
+        }
+
+        .tooltip-title {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            line-height: 1.3;
+        }
+
+        .tooltip-description {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            line-height: 1.4;
+            margin: 0 0 12px 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .tooltip-links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tooltip-link {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(0, 150, 255, 0.8);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 150, 255, 0.3);
+        }
+
+        .tooltip-link:hover {
+            background: rgba(0, 150, 255, 1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 150, 255, 0.4);
+        }
+
+        /* Connection line animation */
+        .connection-line {
+            position: fixed;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                rgba(0, 123, 255, 0.8) 0%, 
+                rgba(0, 123, 255, 0.6) 50%, 
+                rgba(0, 123, 255, 0.4) 100%);
+            transform-origin: 0 center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1999;
+            pointer-events: none;
+        }
+
+        .connection-line.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .connection-line::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: rgba(0, 123, 255, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 0 12px rgba(0, 123, 255, 0.6);
+        }
+
+        /* Tooltip Arrow */
+        .tooltip-arrow {
+            display: none;
+        }
+
+
+        /* GT7-style pulse animation */
+        @keyframes gt7-pulse {
+
+            0%,
+            100% {
+                box-shadow:
+                    0 0 12px rgba(0, 150, 255, 0.3),
+                    0 0 24px rgba(0, 150, 255, 0.1);
+            }
+
+            50% {
+                box-shadow:
+                    0 0 16px rgba(0, 150, 255, 0.4),
+                    0 0 32px rgba(0, 150, 255, 0.15);
+            }
+        }
+
+        /* GT7-inspired hotspot hover effects */
+        .hotspot {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hotspot:hover {
+            transform: scale(1.15);
+            background: radial-gradient(circle, rgba(0, 150, 255, 1) 0%, rgba(0, 150, 255, 0.6) 70%, transparent 100%);
+            box-shadow:
+                0 0 20px rgba(0, 150, 255, 0.6),
+                0 0 40px rgba(0, 150, 255, 0.3),
+                0 0 60px rgba(0, 150, 255, 0.1);
+            border-color: rgba(0, 150, 255, 1);
+            animation: none;
+            /* Stop pulse on hover */
+        }
+
+        .hotspot:focus {
+            outline: 2px solid rgba(0, 150, 255, 0.8);
+            outline-offset: 4px;
+        }
+
+        .hotspot:active {
+            transform: scale(1.05);
+            transition-duration: 0.1s;
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+
+            .parallax-scene,
+            .parallax-layer,
+            .layer-image {
+                transition: none !important;
+                will-change: auto !important;
+            }
+        }
+
+
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Mobile optimizations for tooltip */
+        @media (max-width: 768px) {
+            .tooltip {
+                max-width: 260px;
+            }
+
+            .tooltip-title {
+                font-size: 15px;
+            }
+
+            .tooltip-description {
+                font-size: 12px;
+            }
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-content {
+            text-align: center;
+            color: white;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #007bff;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>Loading Portfolio...</p>
+        </div>
+    </div>
+
+    <div class="hero-container">
+        <div class="parallax-scene" id="parallaxScene">
+            <!-- World Map Layer -->
+            <div class="world-layer" id="worldLayer">
+                <img src="assets/images/TM-world.png" alt="World Map" class="world-image" id="worldImage"
+                    onerror="console.error('Core Map Image failed to load from assets/images/TM-world.png')">
+
+                <!-- Hotspots Overlay -->
+                <div class="hotspots-overlay" id="hotspotsOverlay">
+                    <!-- Hotspots will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debug Info Panel -->
+    <div class="debug-info" id="debugInfo">
+        <div>Container: <span id="debugContainer">0x0</span></div>
+        <div>Image Rect: <span id="debugImageRect">0x0+0+0</span></div>
+        <div>Position: <span id="debugPosition">0.00, 0.00</span></div>
+        <div>Smooth: <span id="debugSmooth">0.00, 0.00</span></div>
+        <div>Mouse: <span id="debugMouse">0, 0</span></div>
+        <div>Edge Move: <span id="debugEdge">none</span></div>
+        <div>Press 'D' to toggle debug mode</div>
+    </div>
+
+    <!-- Edge movement zones (debug mode only) -->
+    <div class="edge-zone" id="edgeTop"></div>
+    <div class="edge-zone" id="edgeRight"></div>
+    <div class="edge-zone" id="edgeBottom"></div>
+    <div class="edge-zone" id="edgeLeft"></div>
+
+    <!-- Tooltip -->
+    <div class="tooltip" id="projectTooltip">
+        <div class="tooltip-content">
+            <div class="tooltip-image" id="tooltipImage" style="display: none;">
+                <img id="tooltipImg" alt="Project image">
+            </div>
+            <div class="tooltip-body">
+                <h3 class="tooltip-title" id="tooltipTitle">Project Title</h3>
+                <p class="tooltip-description" id="tooltipDescription">
+                    Project description will appear here.
+                </p>
+                <div class="tooltip-links" id="tooltipLinks">
+                    <!-- Links will be dynamically inserted -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Line -->
+    <div class="connection-line" id="connectionLine"></div>
+
+    <script>
+        // Project data will be loaded dynamically from API
+        let projectsData = [];
+
+        class ParallaxHero {
+            constructor() {
+                this.scene = document.getElementById('parallaxScene');
+                this.worldLayer = document.getElementById('worldLayer');
+                this.worldImage = document.getElementById('worldImage');
+                this.hotspotsOverlay = document.getElementById('hotspotsOverlay');
+
+                // Camera System Constants for TM-world.png
+                this.motionConfig = {
+                    zoomScale: 0.5,      // 12.5% zoom = 0.5x scale (4x more zoomed out from original)
+                    maxCameraX: 0,       // Will be calculated based on image size
+                    maxCameraY: 0,       // Will be calculated based on image size
+                    lerpFactor: 0.08,    // Smooth camera movement
+                    dragSensitivity: 1.0,
+                    
+                    // Edge movement settings
+                    edgeZone: 50,        // Pixels from edge to trigger movement
+                    edgeSpeed: 3.0       // Movement speed when cursor is at edge
+                };
+
+                // Camera position state
+                this.camera = {
+                    x: 0,        // Current camera position
+                    y: 0,
+                    targetX: 0,  // Target camera position
+                    targetY: 0
+                };
+
+                // Drag state
+                this.dragState = {
+                    isActive: false,
+                    startX: 0,
+                    startY: 0,
+                    startCameraX: 0,
+                    startCameraY: 0
+                };
+
+                // Image dimensions
+                this.imageRect = { width: 0, height: 0 };
+                this.debugMode = false;
+                this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                
+                // Edge movement state
+                this.edgeMovement = {
+                    active: false,
+                    mouseX: 0,
+                    mouseY: 0
+                };
+
+                this.init();
+            }
+
+            async init() {
+                try {
+                    // Load projects from API
+                    await this.loadProjects();
+
+                    this.setupEventListeners();
+                    this.createHotspots();
+                    this.startAnimation();
+
+                    // Wait for image to load and initialize camera system
+                    this.waitForImageLoad(this.worldImage).then(() => {
+                        const finalize = () => {
+                            if (this.scene.clientWidth > 0 && this.worldImage.naturalWidth > 0) {
+                                this.calculateCameraBounds();
+                                this.updateHotspots();
+                                
+                                // Start camera at center with 12.5% zoom
+                                this.camera.x = this.camera.targetX = 0;
+                                this.camera.y = this.camera.targetY = 0;
+
+                                this.applyTransforms();
+                                this.hideLoading();
+                            } else {
+                                requestAnimationFrame(finalize);
+                            }
+                        };
+                        finalize();
+                    });
+                } catch (error) {
+                    console.error('Failed to initialize portfolio:', error);
+                    projectsData = [];
+                    this.setupEventListeners();
+                    this.startAnimation();
+                    this.hideLoading();
+                }
+            }
+
+            hideLoading() {
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add('hidden');
+                    setTimeout(() => {
+                        loadingOverlay.style.display = 'none';
+                    }, 500);
+                }
+            }
+
+            async loadProjects() {
+                try {
+                    const response = await fetch('/api/projects');
+                    const data = await response.json();
+
+                    if (data.success && Array.isArray(data.data)) {
+                        projectsData = data.data.map(project => ({
+                            id: project.id.toString(),
+                            title: project.title,
+                            description: project.description || '',
+                            links: project.links || [],
+                            region: project.coordinates || { x: 0.5, y: 0.5, w: 0.1, h: 0.1 },
+                            image_url: project.image_url,
+                            video_url: project.video_url
+                        }));
+                    } else {
+                        projectsData = [];
+                    }
+                } catch (error) {
+                    console.error('Failed to load projects:', error);
+                    try {
+                        const fallbackResponse = await fetch('/data/projects.json');
+                        projectsData = await fallbackResponse.json();
+                    } catch (fallbackError) {
+                        projectsData = [];
+                    }
+                }
+            }
+
+            waitForImageLoad(img) {
+                return new Promise((resolve) => {
+                    if (img.complete) {
+                        resolve();
+                    } else {
+                        img.addEventListener('load', () => {
+                            console.log('Map image loaded successfully:', img.src);
+                            resolve();
+                        });
+                        img.addEventListener('error', (e) => {
+                            console.error('Map image FAILED to load:', img.src, e);
+                            resolve(); // Proceed anyway to avoid hanging
+                        });
+                    }
+                });
+            }
+
+            setupEventListeners() {
+                // Mouse Drag Events
+                this.scene.addEventListener('mousedown', this.handleDragStart.bind(this));
+                window.addEventListener('mousemove', this.handleDragMove.bind(this));
+                window.addEventListener('mouseup', this.handleDragEnd.bind(this));
+
+                // Touch Drag Events
+                this.scene.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
+                this.scene.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+                this.scene.addEventListener('touchend', this.handleDragEnd.bind(this));
+
+                // Global resize
+                window.addEventListener('resize', this.handleResize.bind(this));
+
+                // Debug/UI shortcuts
+                document.addEventListener('keydown', this.handleKeyDown.bind(this));
+
+                // Edge movement - track mouse position globally
+                document.addEventListener('mousemove', this.handleMouseMove.bind(this));
+                document.addEventListener('mouseenter', () => this.edgeMovement.active = true);
+                document.addEventListener('mouseleave', () => this.edgeMovement.active = false);
+
+                this.setupTooltipEvents();
+            }
+
+            // Unified Drag Handler
+            handleDragStart(e) {
+                if (e.button !== 0) return; // Only left click
+                
+                // Check if tooltip is visible - if so, don't allow dragging
+                const tooltip = document.getElementById('projectTooltip');
+                if (tooltip && tooltip.classList.contains('visible')) {
+                    return;
+                }
+                e.preventDefault(); // Prevent native browser drag
+                this.initDrag(e.clientX, e.clientY);
+            }
+
+            handleTouchStart(e) {
+                if (e.touches.length === 1) {
+                    // Check if tooltip is visible - if so, don't allow dragging
+                    const tooltip = document.getElementById('projectTooltip');
+                    if (tooltip && tooltip.classList.contains('visible')) {
+                        return;
+                    }
+                    
+                    // Don't preventDefault here as it might block button clicks
+                    // handleTouchMove will handle preventDefault
+                    const touch = e.touches[0];
+                    this.initDrag(touch.clientX, touch.clientY);
+                }
+            }
+
+            initDrag(x, y) {
+                this.dragState.isActive = true;
+                this.dragState.startX = x;
+                this.dragState.startY = y;
+                this.dragState.startCameraX = this.camera.targetX;
+                this.dragState.startCameraY = this.camera.targetY;
+                this.scene.style.cursor = 'grabbing';
+            }
+
+            handleDragMove(e) {
+                if (!this.dragState.isActive) return;
+                this.updateDrag(e.clientX, e.clientY);
+            }
+
+            handleTouchMove(e) {
+                if (!this.dragState.isActive || e.touches.length !== 1) return;
+                e.preventDefault();
+                const touch = e.touches[0];
+                this.updateDrag(touch.clientX, touch.clientY);
+            }
+
+            updateDrag(x, y) {
+                const dx = x - this.dragState.startX;
+                const dy = y - this.dragState.startY;
+
+                // Update target camera position (1:1 with screen pixels)
+                let newTargetX = this.dragState.startCameraX - dx;
+                let newTargetY = this.dragState.startCameraY - dy;
+
+                // Clamp to boundaries to prevent showing empty edges
+                this.camera.targetX = Math.max(-this.motionConfig.maxCameraX, Math.min(this.motionConfig.maxCameraX, newTargetX));
+                this.camera.targetY = Math.max(-this.motionConfig.maxCameraY, Math.min(this.motionConfig.maxCameraY, newTargetY));
+            }
+
+            handleDragEnd() {
+                this.dragState.isActive = false;
+                this.scene.style.cursor = 'grab';
+            }
+
+            handleResize() {
+                this.updateImageRect();
+                this.updateHotspots();
+                
+                if (this.debugMode) {
+                    this.setupDebugEdgeZones();
+                }
+            }
+
+            handleMouseMove(e) {
+                // Update mouse position for edge movement
+                this.edgeMovement.mouseX = e.clientX;
+                this.edgeMovement.mouseY = e.clientY;
+            }
+
+            handleKeyDown(e) {
+                if (e.key.toLowerCase() === 'd') {
+                    this.toggleDebugMode();
+                }
+                if (e.key === 'Escape') {
+                    this.hideTooltip();
+                }
+            }
+
+            toggleDebugMode() {
+                this.debugMode = !this.debugMode;
+                document.body.classList.toggle('debug-mode', this.debugMode);
+                
+                if (this.debugMode) {
+                    this.setupDebugEdgeZones();
+                }
+            }
+
+            setupDebugEdgeZones() {
+                const edgeZone = this.motionConfig.edgeZone;
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+
+                // Top edge zone
+                const edgeTop = document.getElementById('edgeTop');
+                edgeTop.style.left = '0';
+                edgeTop.style.top = '0';
+                edgeTop.style.width = '100%';
+                edgeTop.style.height = `${edgeZone}px`;
+
+                // Right edge zone
+                const edgeRight = document.getElementById('edgeRight');
+                edgeRight.style.right = '0';
+                edgeRight.style.top = '0';
+                edgeRight.style.width = `${edgeZone}px`;
+                edgeRight.style.height = '100%';
+
+                // Bottom edge zone
+                const edgeBottom = document.getElementById('edgeBottom');
+                edgeBottom.style.left = '0';
+                edgeBottom.style.bottom = '0';
+                edgeBottom.style.width = '100%';
+                edgeBottom.style.height = `${edgeZone}px`;
+
+                // Left edge zone
+                const edgeLeft = document.getElementById('edgeLeft');
+                edgeLeft.style.left = '0';
+                edgeLeft.style.top = '0';
+                edgeLeft.style.width = `${edgeZone}px`;
+                edgeLeft.style.height = '100%';
+            }
+
+            startAnimation() {
+                const animate = () => {
+                    this.updateSmoothing();
+                    this.applyTransforms();
+                    this.updateDebugInfo();
+                    requestAnimationFrame(animate);
+                };
+                animate();
+            }
+
+            updateSmoothing() {
+                // Check if tooltip is visible - if so, disable all movement
+                const tooltip = document.getElementById('projectTooltip');
+                const tooltipVisible = tooltip && tooltip.classList.contains('visible');
+                
+                // Update edge movement if active, not dragging, and tooltip not visible
+                if (this.edgeMovement.active && !this.dragState.isActive && !tooltipVisible) {
+                    this.updateEdgeMovement();
+                }
+
+                if (this.prefersReducedMotion) {
+                    this.camera.x = this.camera.targetX;
+                    this.camera.y = this.camera.targetY;
+                    return;
+                }
+
+                // Smooth camera movement interpolation
+                const lerpFactor = this.motionConfig.lerpFactor;
+                this.camera.x += (this.camera.targetX - this.camera.x) * lerpFactor;
+                this.camera.y += (this.camera.targetY - this.camera.y) * lerpFactor;
+            }
+
+            updateEdgeMovement() {
+                const { mouseX, mouseY } = this.edgeMovement;
+                const { edgeZone, edgeSpeed, maxCameraX, maxCameraY } = this.motionConfig;
+                const viewport = {
+                    width: window.innerWidth,
+                    height: window.innerHeight
+                };
+
+                let moveX = 0;
+                let moveY = 0;
+
+                // Check horizontal edges
+                if (mouseX < edgeZone) {
+                    // Left edge - move camera left (negative direction)
+                    const intensity = (edgeZone - mouseX) / edgeZone;
+                    moveX = -edgeSpeed * intensity;
+                } else if (mouseX > viewport.width - edgeZone) {
+                    // Right edge - move camera right (positive direction)
+                    const intensity = (mouseX - (viewport.width - edgeZone)) / edgeZone;
+                    moveX = edgeSpeed * intensity;
+                }
+
+                // Check vertical edges
+                if (mouseY < edgeZone) {
+                    // Top edge - move camera up (negative direction)
+                    const intensity = (edgeZone - mouseY) / edgeZone;
+                    moveY = -edgeSpeed * intensity;
+                } else if (mouseY > viewport.height - edgeZone) {
+                    // Bottom edge - move camera down (positive direction)
+                    const intensity = (mouseY - (viewport.height - edgeZone)) / edgeZone;
+                    moveY = edgeSpeed * intensity;
+                }
+
+                // Apply edge movement to camera target
+                if (moveX !== 0 || moveY !== 0) {
+                    let newTargetX = this.camera.targetX + moveX;
+                    let newTargetY = this.camera.targetY + moveY;
+
+                    // Clamp to boundaries
+                    this.camera.targetX = Math.max(-maxCameraX, Math.min(maxCameraX, newTargetX));
+                    this.camera.targetY = Math.max(-maxCameraY, Math.min(maxCameraY, newTargetY));
+                }
+            }
+
+            applyTransforms() {
+                const moveX = -this.camera.x;
+                const moveY = -this.camera.y;
+                const scale = this.motionConfig.zoomScale;
+
+                // Apply camera movement to both image and hotspots
+                const transform = `translate(-50%, -50%) translate(${moveX}px, ${moveY}px) scale(${scale})`;
+
+                this.worldImage.style.transform = transform;
+                this.hotspotsOverlay.style.transform = transform;
+            }
+
+            calculateCameraBounds() {
+                const cw = this.scene.clientWidth;
+                const ch = this.scene.clientHeight;
+                const iw = this.worldImage.naturalWidth;
+                const ih = this.worldImage.naturalHeight;
+
+                if (!iw || !ih || !cw || !ch) return;
+
+                // Calculate how much we can move the camera at 12.5% zoom (0.5x scale)
+                const scaledImageWidth = iw * this.motionConfig.zoomScale;
+                const scaledImageHeight = ih * this.motionConfig.zoomScale;
+                
+                // Maximum camera movement is half the difference between scaled image and viewport
+                this.motionConfig.maxCameraX = Math.max(0, (scaledImageWidth - cw) / 2);
+                this.motionConfig.maxCameraY = Math.max(0, (scaledImageHeight - ch) / 2);
+
+                this.imageRect = {
+                    width: scaledImageWidth,
+                    height: scaledImageHeight
+                };
+
+                console.log('Camera bounds calculated:', {
+                    viewport: `${cw}x${ch}`,
+                    image: `${iw}x${ih}`,
+                    scaled: `${scaledImageWidth}x${scaledImageHeight}`,
+                    maxMovement: `${this.motionConfig.maxCameraX}x${this.motionConfig.maxCameraY}`
+                });
+            }
+
+            updateImageRect() {
+                this.calculateCameraBounds();
+                
+                // Clamp current camera to new boundaries
+                this.camera.targetX = Math.max(-this.motionConfig.maxCameraX, Math.min(this.motionConfig.maxCameraX, this.camera.targetX));
+                this.camera.targetY = Math.max(-this.motionConfig.maxCameraY, Math.min(this.motionConfig.maxCameraY, this.camera.targetY));
+            }
+
+            createHotspots() {
+                projectsData.forEach(project => {
+                    const hotspot = document.createElement('button');
+                    hotspot.className = 'hotspot';
+                    hotspot.setAttribute('data-project-id', project.id);
+                    hotspot.setAttribute('aria-label', `Open ${project.title} project details`);
+
+                    // Add debug label
+                    const label = document.createElement('div');
+                    label.className = 'debug-label';
+                    label.textContent = project.id;
+                    hotspot.appendChild(label);
+
+                    // Click handler
+                    hotspot.addEventListener('click', () => this.showTooltip(project, hotspot));
+
+                    // Hover handlers to disable/enable parallax (using capture for immediate response)
+                    hotspot.addEventListener('mouseenter', () => this.disableParallax(), true);
+                    hotspot.addEventListener('mouseleave', () => this.enableParallax(), true);
+
+                    // Also add pointer events for more reliable detection
+                    hotspot.addEventListener('pointerenter', () => this.disableParallax());
+                    hotspot.addEventListener('pointerleave', () => this.enableParallax());
+
+                    this.hotspotsOverlay.appendChild(hotspot);
+                });
+
+                this.updateHotspots();
+            }
+
+            updateHotspots() {
+                const hotspots = this.hotspotsOverlay.querySelectorAll('.hotspot');
+
+                hotspots.forEach((hotspot, index) => {
+                    const project = projectsData[index];
+                    if (!project) return;
+
+                    const { x, y } = project.region;
+                    const iw = this.worldImage.naturalWidth || 1000;
+                    const ih = this.worldImage.naturalHeight || 1000;
+
+                    // Position hotspots relative to the image
+                    // Since the overlay is scaled the same as the image, we can use natural image coordinates
+                    const posX = (x - 0.5) * iw; // Convert from 0-1 to pixels from center
+                    const posY = (y - 0.5) * ih;
+
+                    hotspot.style.left = `calc(50% + ${posX}px)`;
+                    hotspot.style.top = `calc(50% + ${posY}px)`;
+                    hotspot.style.transform = `translate(-50%, -50%)`;
+                });
+            }
+
+            // Tooltip functionality
+            setupTooltipEvents() {
+                const tooltip = document.getElementById('projectTooltip');
+
+                // Close tooltip when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!tooltip.contains(e.target) && !e.target.closest('.hotspot')) {
+                        this.hideTooltip();
+                    }
+                });
+
+                // Disable parallax when hovering tooltip
+                tooltip.addEventListener('mouseenter', () => this.disableParallax());
+                tooltip.addEventListener('mouseleave', () => this.enableParallax());
+            }
+
+            showTooltip(project, hotspot) {
+                const tooltip = document.getElementById('projectTooltip');
+                const connectionLine = document.getElementById('connectionLine');
+                const title = document.getElementById('tooltipTitle');
+                const description = document.getElementById('tooltipDescription');
+                const links = document.getElementById('tooltipLinks');
+                const imageContainer = document.getElementById('tooltipImage');
+                const image = document.getElementById('tooltipImg');
+
+                // Hide connection line first
+                connectionLine.classList.remove('visible');
+                connectionLine.style.cssText = '';
+
+                // Populate content while tooltip is hidden
+                title.textContent = project.title;
+                description.textContent = project.description;
+
+                // Handle image display
+                if (project.image_url) {
+                    image.src = project.image_url;
+                    imageContainer.style.display = 'block';
+                } else {
+                    imageContainer.style.display = 'none';
+                }
+
+                // Clear and populate links
+                links.innerHTML = '';
+                project.links.forEach(link => {
+                    const linkEl = document.createElement('a');
+                    linkEl.href = link.url;
+                    linkEl.textContent = link.text;
+                    linkEl.className = 'tooltip-link';
+                    linkEl.target = '_blank';
+                    linkEl.rel = 'noopener noreferrer';
+                    links.appendChild(linkEl);
+                });
+
+                // Remove visible class but keep tooltip in DOM for positioning
+                tooltip.classList.remove('visible');
+                tooltip.className = 'tooltip'; // Reset position classes
+
+                // Position tooltip near hotspot (this sets the position class)
+                this.positionTooltip(tooltip, hotspot);
+
+                // Disable parallax when tooltip is shown
+                this.disableParallax();
+                this.scene.classList.add('tooltip-active');
+
+                // Show tooltip immediately after positioning
+                tooltip.classList.add('visible');
+
+                // Create connection line with sufficient delay for positioning to complete
+                setTimeout(() => {
+                    this.showConnectionLine(hotspot, tooltip);
+                }, 200);
+            }
+
+            hideTooltip() {
+                const tooltip = document.getElementById('projectTooltip');
+                const connectionLine = document.getElementById('connectionLine');
+
+                // Remove visible classes
+                tooltip.classList.remove('visible');
+                connectionLine.classList.remove('visible');
+
+                // Clear any position classes
+                tooltip.className = 'tooltip';
+
+                // Reset connection line styles
+                connectionLine.style.left = '';
+                connectionLine.style.top = '';
+                connectionLine.style.width = '';
+                connectionLine.style.transform = '';
+
+                // Re-enable parallax when tooltip is hidden
+                this.enableParallax();
+                this.scene.classList.remove('tooltip-active');
+            }
+
+            disableParallax() {
+                // Disable all camera movement when tooltip is active
+                this.parallaxDisabled = true;
+            }
+
+            enableParallax() {
+                // Only enable if no tooltip is visible and no hotspot is being hovered
+                const tooltip = document.getElementById('projectTooltip');
+                const hoveredHotspot = document.querySelector('.hotspot:hover');
+
+                if (!tooltip.classList.contains('visible') && !hoveredHotspot) {
+                    this.parallaxDisabled = false;
+                }
+            }
+
+            showConnectionLine(hotspot, tooltip) {
+                const connectionLine = document.getElementById('connectionLine');
+
+                // Ensure we wait for any ongoing transitions to settle
+                setTimeout(() => {
+                    // Force fresh layout calculation
+                    tooltip.offsetHeight;
+                    hotspot.offsetHeight;
+
+                    // Get current positions after layout
+                    const hotspotRect = hotspot.getBoundingClientRect();
+                    const tooltipRect = tooltip.getBoundingClientRect();
+
+                    // Validate rectangles
+                    if (!hotspotRect.width || !tooltipRect.width) {
+                        return;
+                    }
+
+                    // Get hotspot center
+                    const hotspotCenterX = hotspotRect.left + (hotspotRect.width / 2);
+                    const hotspotCenterY = hotspotRect.top + (hotspotRect.height / 2);
+
+                    // Get tooltip connection point based on position
+                    let tooltipConnectX, tooltipConnectY;
+                    const tooltipClasses = tooltip.className;
+
+                    if (tooltipClasses.includes('position-top')) {
+                        tooltipConnectX = tooltipRect.left + (tooltipRect.width / 2);
+                        tooltipConnectY = tooltipRect.bottom;
+                    } else if (tooltipClasses.includes('position-bottom')) {
+                        tooltipConnectX = tooltipRect.left + (tooltipRect.width / 2);
+                        tooltipConnectY = tooltipRect.top;
+                    } else if (tooltipClasses.includes('position-left')) {
+                        tooltipConnectX = tooltipRect.right;
+                        tooltipConnectY = tooltipRect.top + (tooltipRect.height / 2);
+                    } else if (tooltipClasses.includes('position-right')) {
+                        tooltipConnectX = tooltipRect.left;
+                        tooltipConnectY = tooltipRect.top + (tooltipRect.height / 2);
+                    } else {
+                        tooltipConnectX = tooltipRect.left + (tooltipRect.width / 2);
+                        tooltipConnectY = tooltipRect.top + (tooltipRect.height / 2);
+                    }
+
+                    // Calculate line properties
+                    const deltaX = tooltipConnectX - hotspotCenterX;
+                    const deltaY = tooltipConnectY - hotspotCenterY;
+                    const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+
+                    // Set line properties
+                    connectionLine.style.left = `${hotspotCenterX}px`;
+                    connectionLine.style.top = `${hotspotCenterY}px`;
+                    connectionLine.style.width = `${length}px`;
+                    connectionLine.style.transform = `rotate(${angle}deg)`;
+                    connectionLine.style.transformOrigin = '0 center';
+
+                    // Show the line
+                    connectionLine.classList.add('visible');
+                }, 100);
+            }
+
+            positionTooltip(tooltip, hotspot) {
+                const hotspotRect = hotspot.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
+                const viewport = {
+                    width: window.innerWidth,
+                    height: window.innerHeight
+                };
+
+                const spacing = 200;
+                let position = 'top'; // default
+                let left = hotspotRect.left + (hotspotRect.width / 2);
+                let top = hotspotRect.top - tooltipRect.height - spacing;
+
+                // Check if tooltip fits above hotspot
+                if (top < spacing) {
+                    // Position below
+                    position = 'bottom';
+                    top = hotspotRect.bottom + spacing;
+                }
+
+                // Check if tooltip fits to the right
+                if (left + tooltipRect.width / 2 > viewport.width - spacing) {
+                    // Position to the left
+                    position = 'left';
+                    left = hotspotRect.left - tooltipRect.width - spacing;
+                    top = hotspotRect.top + (hotspotRect.height / 2) - (tooltipRect.height / 2);
+                }
+
+                // Check if tooltip fits to the left
+                if (left - tooltipRect.width / 2 < spacing) {
+                    // Position to the right
+                    position = 'right';
+                    left = hotspotRect.right + spacing;
+                    top = hotspotRect.top + (hotspotRect.height / 2) - (tooltipRect.height / 2);
+                }
+
+                // Center tooltip for top/bottom positions
+                if (position === 'top' || position === 'bottom') {
+                    left = left - (tooltipRect.width / 2);
+
+                    // Keep tooltip within viewport horizontally
+                    if (left < spacing) left = spacing;
+                    if (left + tooltipRect.width > viewport.width - spacing) {
+                        left = viewport.width - tooltipRect.width - spacing;
+                    }
+                }
+
+                // Keep tooltip within viewport vertically
+                if (top < spacing) top = spacing;
+                if (top + tooltipRect.height > viewport.height - spacing) {
+                    top = viewport.height - tooltipRect.height - spacing;
+                }
+
+                // Apply position and class for arrow
+                tooltip.style.left = `${left}px`;
+                tooltip.style.top = `${top}px`;
+                tooltip.className = `tooltip position-${position}`;
+            }
+
+
+            updateDebugInfo() {
+                if (!this.debugMode) return;
+
+                const container = document.getElementById('debugContainer');
+                const imageRect = document.getElementById('debugImageRect');
+                const position = document.getElementById('debugPosition');
+                const smooth = document.getElementById('debugSmooth');
+                const mouse = document.getElementById('debugMouse');
+                const edge = document.getElementById('debugEdge');
+
+                // Debug info for camera system
+                container.textContent = `Viewport: ${this.scene.clientWidth}x${this.scene.clientHeight}`;
+                imageRect.textContent = `Image: ${Math.round(this.imageRect.width)}x${Math.round(this.imageRect.height)}`;
+                position.textContent = `Camera: (${this.camera.targetX.toFixed(1)}, ${this.camera.targetY.toFixed(1)})`;
+                smooth.textContent = `Limits: (±${this.motionConfig.maxCameraX.toFixed(1)}, ±${this.motionConfig.maxCameraY.toFixed(1)})`;
+                mouse.textContent = `${this.edgeMovement.mouseX}, ${this.edgeMovement.mouseY}`;
+
+                // Check if mouse is in edge zones
+                const { mouseX, mouseY } = this.edgeMovement;
+                const { edgeZone } = this.motionConfig;
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                
+                let edgeStatus = 'none';
+                if (mouseX < edgeZone) edgeStatus += ' LEFT';
+                if (mouseX > vw - edgeZone) edgeStatus += ' RIGHT';
+                if (mouseY < edgeZone) edgeStatus += ' TOP';
+                if (mouseY > vh - edgeZone) edgeStatus += ' BOTTOM';
+                
+                edge.textContent = edgeStatus === 'none' ? 'none' : edgeStatus.trim();
+            }
+        }
+
+        // Initialize the parallax hero when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new ParallaxHero();
+        });
+
+        // Accessibility: Announce to screen readers
+        const announcement = document.createElement('div');
+        announcement.className = 'sr-only';
+        announcement.setAttribute('aria-live', 'polite');
+        announcement.textContent = 'Interactive portfolio hero loaded. Use tab to navigate to project hotspots.';
+        document.body.appendChild(announcement);
+    </script>
+</body>
+
+</html>
