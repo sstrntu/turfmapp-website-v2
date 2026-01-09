@@ -50,45 +50,93 @@ router.get('/:id', async (req, res) => {
 // Create new project (admin only)
 router.post('/', requireAuth, async (req, res) => {
     try {
-        const { title, description, image_url, video_url, links, coordinates } = req.body;
+        const { title, description, image_url, video_url, links, coordinates, name, projects } = req.body;
 
-        if (!title) {
-            return res.status(400).json({ 
-                error: 'Missing title',
-                message: 'Project title is required'
-            });
-        }
-
-        // Validate coordinates if provided
-        if (coordinates) {
-            const { x, y, w, h } = coordinates;
-            if (x < 0 || x > 1 || y < 0 || y > 1 || w < 0 || w > 1 || h < 0 || h > 1) {
+        
+        if (name && Array.isArray(projects)) {
+            // New tooltip format
+            if (!name.trim()) {
                 return res.status(400).json({ 
-                    error: 'Invalid coordinates',
-                    message: 'Coordinates must be between 0 and 1'
+                    error: 'Missing name',
+                    message: 'Tooltip name is required'
                 });
             }
+
+            if (projects.length === 0) {
+                return res.status(400).json({ 
+                    error: 'Missing projects',
+                    message: 'At least one project is required'
+                });
+            }
+
+            // Validate coordinates if provided
+            if (coordinates) {
+                const { x, y, w, h } = coordinates;
+                if (x < 0 || x > 1 || y < 0 || y > 1 || w < 0 || w > 1 || h < 0 || h > 1) {
+                    return res.status(400).json({ 
+                        error: 'Invalid coordinates',
+                        message: 'Coordinates must be between 0 and 1'
+                    });
+                }
+            }
+
+            const projectId = await projectsDB.create({
+                name: name.trim(),
+                projects: projects,
+                coordinates: coordinates || {}
+            });
+
+            // Regenerate projects.json file
+            await generateProjectsJSON();
+
+            const newProject = await projectsDB.getById(projectId);
+            
+            res.status(201).json({
+                success: true,
+                message: 'Tooltip created successfully',
+                data: newProject
+            });
+
+        } else {
+            // Legacy single project format
+            if (!title) {
+                return res.status(400).json({ 
+                    error: 'Missing title',
+                    message: 'Project title is required'
+                });
+            }
+
+            // Validate coordinates if provided
+            if (coordinates) {
+                const { x, y, w, h } = coordinates;
+                if (x < 0 || x > 1 || y < 0 || y > 1 || w < 0 || w > 1 || h < 0 || h > 1) {
+                    return res.status(400).json({ 
+                        error: 'Invalid coordinates',
+                        message: 'Coordinates must be between 0 and 1'
+                    });
+                }
+            }
+
+            const projectId = await projectsDB.create({
+                title,
+                description,
+                image_url,
+                video_url,
+                links: Array.isArray(links) ? links : [],
+                coordinates: coordinates || {}
+            });
+
+            // Regenerate projects.json file
+            await generateProjectsJSON();
+
+            const newProject = await projectsDB.getById(projectId);
+            
+            res.status(201).json({
+                success: true,
+                message: 'Project created successfully',
+                data: newProject
+            });
         }
-
-        const projectId = await projectsDB.create({
-            title,
-            description,
-            image_url,
-            video_url,
-            links: Array.isArray(links) ? links : [],
-            coordinates: coordinates || {}
-        });
-
-        // Regenerate projects.json file
-        await generateProjectsJSON();
-
-        const newProject = await projectsDB.getById(projectId);
-        
-        res.status(201).json({
-            success: true,
-            message: 'Project created successfully',
-            data: newProject
-        });
 
     } catch (error) {
         console.error('Error creating project:', error);
@@ -103,14 +151,7 @@ router.post('/', requireAuth, async (req, res) => {
 router.put('/:id', requireAuth, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, image_url, video_url, links, coordinates } = req.body;
-
-        if (!title) {
-            return res.status(400).json({ 
-                error: 'Missing title',
-                message: 'Project title is required'
-            });
-        }
+        const { title, description, image_url, video_url, links, coordinates, name, projects } = req.body;
 
         // Check if project exists
         const existingProject = await projectsDB.getById(parseInt(id));
@@ -121,43 +162,106 @@ router.put('/:id', requireAuth, async (req, res) => {
             });
         }
 
-        // Validate coordinates if provided
-        if (coordinates) {
-            const { x, y, w, h } = coordinates;
-            if (x < 0 || x > 1 || y < 0 || y > 1 || w < 0 || w > 1 || h < 0 || h > 1) {
+        // Check if this is the new tooltip format (with name and projects array)
+        
+        if (name && Array.isArray(projects)) {
+            // New tooltip format
+            if (!name.trim()) {
                 return res.status(400).json({ 
-                    error: 'Invalid coordinates',
-                    message: 'Coordinates must be between 0 and 1'
+                    error: 'Missing name',
+                    message: 'Tooltip name is required'
                 });
             }
-        }
 
-        const updatedRows = await projectsDB.update(parseInt(id), {
-            title,
-            description,
-            image_url,
-            video_url,
-            links: Array.isArray(links) ? links : [],
-            coordinates: coordinates || {}
-        });
+            if (projects.length === 0) {
+                return res.status(400).json({ 
+                    error: 'Missing projects',
+                    message: 'At least one project is required'
+                });
+            }
 
-        if (updatedRows === 0) {
-            return res.status(404).json({ 
-                error: 'Project not found',
-                message: 'The project to update does not exist'
+            // Validate coordinates if provided
+            if (coordinates) {
+                const { x, y, w, h } = coordinates;
+                if (x < 0 || x > 1 || y < 0 || y > 1 || w < 0 || w > 1 || h < 0 || h > 1) {
+                    return res.status(400).json({ 
+                        error: 'Invalid coordinates',
+                        message: 'Coordinates must be between 0 and 1'
+                    });
+                }
+            }
+
+            const updatedRows = await projectsDB.update(parseInt(id), {
+                name: name.trim(),
+                projects: projects,
+                coordinates: coordinates || {}
+            });
+
+            if (updatedRows === 0) {
+                return res.status(404).json({ 
+                    error: 'Project not found',
+                    message: 'The project to update does not exist'
+                });
+            }
+
+            // Regenerate projects.json file
+            await generateProjectsJSON();
+
+            const updatedProject = await projectsDB.getById(parseInt(id));
+            
+            res.json({
+                success: true,
+                message: 'Tooltip updated successfully',
+                data: updatedProject
+            });
+
+        } else {
+            // Legacy single project format
+            if (!title) {
+                return res.status(400).json({ 
+                    error: 'Missing title',
+                    message: 'Project title is required'
+                });
+            }
+
+            // Validate coordinates if provided
+            if (coordinates) {
+                const { x, y, w, h } = coordinates;
+                if (x < 0 || x > 1 || y < 0 || y > 1 || w < 0 || w > 1 || h < 0 || h > 1) {
+                    return res.status(400).json({ 
+                        error: 'Invalid coordinates',
+                        message: 'Coordinates must be between 0 and 1'
+                    });
+                }
+            }
+
+            const updatedRows = await projectsDB.update(parseInt(id), {
+                title,
+                description,
+                image_url,
+                video_url,
+                links: Array.isArray(links) ? links : [],
+                coordinates: coordinates || {}
+            });
+
+            if (updatedRows === 0) {
+                return res.status(404).json({ 
+                    error: 'Project not found',
+                    message: 'The project to update does not exist'
+                });
+            }
+
+            // Regenerate projects.json file
+            await generateProjectsJSON();
+
+            const updatedProject = await projectsDB.getById(parseInt(id));
+            
+            res.json({
+                success: true,
+                message: 'Project updated successfully',
+                data: updatedProject
             });
         }
-
-        // Regenerate projects.json file
-        await generateProjectsJSON();
-
-        const updatedProject = await projectsDB.getById(parseInt(id));
-        
-        res.json({
-            success: true,
-            message: 'Project updated successfully',
-            data: updatedProject
-        });
 
     } catch (error) {
         console.error('Error updating project:', error);

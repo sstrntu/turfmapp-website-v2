@@ -111,6 +111,114 @@
             overflow-y: auto;
         }
 
+        /* Multi-project tooltip styles */
+        .form-section {
+            grid-row: span 2;
+        }
+
+        .projects-container {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: #f8f9fa;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .project-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .project-number {
+            background: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .remove-project-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .remove-project-btn:hover {
+            background: #c82333;
+        }
+
+        .add-project-btn {
+            width: 100%;
+            padding: 1rem;
+            border: 2px dashed #007bff;
+            background: transparent;
+            color: #007bff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .add-project-btn:hover {
+            background: #e3f2fd;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .mode-option {
+            flex: 1;
+            padding: 1rem;
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .mode-option.active {
+            border-color: #007bff;
+            background: #e3f2fd;
+            color: #007bff;
+        }
+
+        .mode-option h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 16px;
+        }
+
+        .mode-option p {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+        }
+
         .map-section {
             background: white;
             border-radius: 12px;
@@ -408,11 +516,11 @@
 </head>
 <body>
     <div class="header">
-        <h1 id="pageTitle">New Project</h1>
+        <h1 id="pageTitle">New Tooltip</h1>
         <div class="header-actions">
             <a href="/admin/dashboard" class="btn btn-secondary">← Back to Dashboard</a>
             <button id="previewBtn" class="btn btn-secondary">👁️ Preview</button>
-            <button id="saveBtn" class="btn btn-success">💾 Save Project</button>
+            <button id="saveBtn" class="btn btn-success">💾 Save Tooltip</button>
         </div>
     </div>
 
@@ -426,41 +534,27 @@
         <div id="editorContent" class="editor-grid" style="display: none;">
             <!-- Form Section -->
             <div class="form-section">
-                <h2 class="section-title">Project Details</h2>
-                
-                <form id="projectForm">
+                <!-- Tooltip Form -->
+                <div id="tooltipForm" class="tooltip-form">
+                    <h2 class="section-title">Tooltip Details</h2>
+                    
                     <div class="form-group">
-                        <label for="title">Project Title *</label>
-                        <input type="text" id="title" name="title" required placeholder="Enter project title">
+                        <label for="tooltipName">Tooltip Name *</label>
+                        <input type="text" id="tooltipName" name="tooltipName" required placeholder="Enter tooltip name (e.g., Southeast Asia Projects)">
                     </div>
 
                     <div class="form-group">
-                        <label for="description">Description</label>
-                        <textarea id="description" name="description" placeholder="Enter project description" rows="4"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Project Links</label>
-                        <div class="links-container">
-                            <div id="linksContainer">
-                                <!-- Links will be added dynamically -->
+                        <label>Projects in Tooltip</label>
+                        <div class="projects-container">
+                            <div id="projectsContainer">
+                                <!-- Projects will be added dynamically -->
                             </div>
-                            <button type="button" id="addLinkBtn" class="btn btn-secondary btn-small">+ Add Link</button>
+                            <button type="button" id="addProjectBtn" class="add-project-btn">
+                                ➕ Add Project
+                            </button>
                         </div>
                     </div>
-
-                    <div class="form-group">
-                        <label>Media Upload</label>
-                        <div class="upload-area" id="uploadArea">
-                            <p>📁 Drop files here or click to upload</p>
-                            <p style="font-size: 12px; color: #666; margin-top: 0.5rem;">
-                                Supported: Images (JPG, PNG, WebP) and Videos (MP4, WebM)
-                            </p>
-                            <input type="file" id="fileInput" style="display: none;" multiple accept="image/*,video/*">
-                        </div>
-                        <div id="mediaPreview" class="media-preview"></div>
-                    </div>
-                </form>
+                </div>
             </div>
 
             <!-- Map Section -->
@@ -490,12 +584,14 @@
     <script>
         class ProjectEditor {
             constructor() {
-                this.projectId = null;
+                this.itemId = null;
                 this.coordinates = { x: 0.5, y: 0.5, w: 0.1, h: 0.1 }; // w,h kept for API compatibility
-                this.links = [];
-                this.uploadedMedia = [];
                 this.isEditing = false;
                 this.imageRect = { width: 0, height: 0, offsetX: 0, offsetY: 0, containerWidth: 0, containerHeight: 0 };
+                
+                // Tooltip data
+                this.tooltipName = '';
+                this.projects = [];
                 
                 this.init();
             }
@@ -505,16 +601,24 @@
                     await this.checkAuth();
                     this.setupEventListeners();
                     
-                    // Check if editing existing project
+                    // Parse URL parameters
                     const urlParams = new URLSearchParams(window.location.search);
-                    this.projectId = urlParams.get('id');
+                    this.itemId = urlParams.get('id');
+                    const tooltipId = urlParams.get('tooltipId');
+                    const action = urlParams.get('action');
                     
-                    if (this.projectId) {
-                        await this.loadProject(this.projectId);
-                        document.getElementById('pageTitle').textContent = 'Edit Project';
+                    if (this.itemId) {
+                        await this.loadItem(this.itemId);
+                        document.getElementById('pageTitle').textContent = 'Edit Tooltip';
                         this.isEditing = true;
+                    } else if (tooltipId && action === 'addProject') {
+                        // Adding project to existing tooltip
+                        await this.loadTooltipForNewProject(tooltipId);
+                        document.getElementById('pageTitle').textContent = 'Add Project to Tooltip';
                     } else {
-                        this.addEmptyLink();
+                        // New tooltip
+                        this.addProject(); // Add first project
+                        document.getElementById('pageTitle').textContent = 'New Tooltip';
                     }
                     
                     this.updateCoordinateDisplay();
@@ -532,6 +636,133 @@
                 if (!data.authenticated) {
                     window.location.href = '/admin';
                     return;
+                }
+            }
+
+
+            addProject() {
+                const project = {
+                    id: Date.now(), // Temporary ID for new projects
+                    title: '',
+                    description: '',
+                    links: [],
+                    uploadedMedia: []
+                };
+                
+                this.projects.push(project);
+                this.renderProjects();
+            }
+
+            removeProject(index) {
+                this.projects.splice(index, 1);
+                this.renderProjects();
+            }
+
+            renderProjects() {
+                const container = document.getElementById('projectsContainer');
+                
+                container.innerHTML = this.projects.map((project, index) => `
+                    <div class="project-item" data-project-index="${index}">
+                        <div class="project-header">
+                            <span class="project-number">Project ${index + 1}</span>
+                            <button type="button" class="remove-project-btn" onclick="editor.removeProject(${index})" ${this.projects.length <= 1 ? 'style="display: none;"' : ''}>
+                                Remove
+                            </button>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Project Title *</label>
+                            <input type="text" value="${this.escapeHtml(project.title || '')}" 
+                                   onchange="editor.updateProject(${index}, 'title', this.value)"
+                                   placeholder="Enter project title" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea onchange="editor.updateProject(${index}, 'description', this.value)"
+                                      placeholder="Enter project description" rows="3">${this.escapeHtml(project.description || '')}</textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Project Links</label>
+                            <div class="links-container">
+                                <div class="links-list" id="projectLinks${index}">
+                                    ${(project.links || []).map((link, linkIndex) => `
+                                        <div class="link-item">
+                                            <input type="text" placeholder="Link text" value="${this.escapeHtml(link.text || '')}" 
+                                                   onchange="editor.updateProjectLink(${index}, ${linkIndex}, 'text', this.value)">
+                                            <input type="url" placeholder="URL" value="${this.escapeHtml(link.url || '')}" 
+                                                   onchange="editor.updateProjectLink(${index}, ${linkIndex}, 'url', this.value)">
+                                            <button type="button" class="btn btn-danger btn-small" 
+                                                    onclick="editor.removeProjectLink(${index}, ${linkIndex})">×</button>
+                                        </div>
+                                    `).join('')}
+                                    <button type="button" class="btn btn-secondary btn-small" 
+                                            onclick="editor.addProjectLink(${index})">+ Add Link</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Media Upload</label>
+                            <div class="upload-area project-upload-area" data-project-index="${index}">
+                                <p>📁 Drop files here or click to upload</p>
+                                <p style="font-size: 12px; color: #666; margin-top: 0.5rem;">
+                                    Supported: Images (JPG, PNG, WebP) and Videos (MP4, WebM)
+                                </p>
+                                <input type="file" style="display: none;" multiple accept="image/*,video/*">
+                            </div>
+                            <div class="media-preview project-media-preview" id="projectMedia${index}">
+                                ${(project.uploadedMedia || []).map((media, mediaIndex) => {
+                                    const isImage = media.original.mimetype.startsWith('image/');
+                                    const url = media.thumbnail?.url || media.original.url;
+                                    
+                                    return `
+                                        <div class="media-item">
+                                            ${isImage ? 
+                                                `<img src="${url}" alt="Media preview">` :
+                                                `<video src="${media.original.url}" muted></video>`
+                                            }
+                                            <button class="remove-btn" onclick="editor.removeProjectMedia(${index}, ${mediaIndex})" title="Remove">×</button>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            updateProject(projectIndex, field, value) {
+                if (this.projects[projectIndex]) {
+                    this.projects[projectIndex][field] = value;
+                }
+            }
+
+            addProjectLink(projectIndex) {
+                if (this.projects[projectIndex]) {
+                    this.projects[projectIndex].links.push({ text: '', url: '' });
+                    this.renderProjects();
+                }
+            }
+
+            updateProjectLink(projectIndex, linkIndex, field, value) {
+                if (this.projects[projectIndex] && this.projects[projectIndex].links[linkIndex]) {
+                    this.projects[projectIndex].links[linkIndex][field] = value;
+                }
+            }
+
+            removeProjectLink(projectIndex, linkIndex) {
+                if (this.projects[projectIndex]) {
+                    this.projects[projectIndex].links.splice(linkIndex, 1);
+                    this.renderProjects();
+                }
+            }
+
+            removeProjectMedia(projectIndex, mediaIndex) {
+                if (this.projects[projectIndex]) {
+                    this.projects[projectIndex].uploadedMedia.splice(mediaIndex, 1);
+                    this.renderProjects();
                 }
             }
 
@@ -570,19 +801,26 @@
 
             setupEventListeners() {
                 // Save button
-                document.getElementById('saveBtn').addEventListener('click', this.saveProject.bind(this));
+                document.getElementById('saveBtn').addEventListener('click', this.saveTooltip.bind(this));
                 
-                // Add link button
-                document.getElementById('addLinkBtn').addEventListener('click', this.addEmptyLink.bind(this));
+                // Tooltip form elements
+                const tooltipNameInput = document.getElementById('tooltipName');
+                if (tooltipNameInput) {
+                    tooltipNameInput.addEventListener('input', (e) => {
+                        this.tooltipName = e.target.value;
+                    });
+                }
                 
-                // File upload
-                const uploadArea = document.getElementById('uploadArea');
-                const fileInput = document.getElementById('fileInput');
+                // Add project button
+                const addProjectBtn = document.getElementById('addProjectBtn');
+                if (addProjectBtn) {
+                    addProjectBtn.addEventListener('click', () => {
+                        this.addProject();
+                    });
+                }
                 
-                uploadArea.addEventListener('click', () => fileInput.click());
-                uploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
-                uploadArea.addEventListener('drop', this.handleDrop.bind(this));
-                fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+                // Setup project upload areas
+                this.setupProjectUploadAreas();
                 
                 // Coordinate picker
                 const coordinatePicker = document.getElementById('coordinatePicker');
@@ -795,25 +1033,85 @@
                 this.renderMediaPreview();
             }
 
-            async saveProject() {
+            async saveTooltip() {
                 try {
-                    const formData = {
-                        title: document.getElementById('title').value.trim(),
-                        description: document.getElementById('description').value.trim(),
-                        links: this.links.filter(link => link.text && link.url),
-                        coordinates: this.coordinates,
-                        image_url: this.uploadedMedia.find(m => m.original.mimetype.startsWith('image/'))?.optimized?.url || this.uploadedMedia.find(m => m.original.mimetype.startsWith('image/'))?.original.url || '',
-                        video_url: this.uploadedMedia.find(m => m.original.mimetype.startsWith('video/'))?.original.url || ''
-                    };
-
-                    if (!formData.title) {
-                        this.showAlert('Project title is required', 'error');
+                    // Get tooltip name from form (read directly from input to ensure we get current value)
+                    const tooltipNameInput = document.getElementById('tooltipName');
+                    
+                    if (!tooltipNameInput) {
+                        this.showAlert('Tooltip name input field not found', 'error');
+                        return;
+                    }
+                    
+                    const tooltipName = tooltipNameInput.value.trim();
+                    
+                    if (!tooltipName) {
+                        this.showAlert('Tooltip name is required', 'error');
                         return;
                     }
 
-                    const url = this.isEditing ? `/api/projects/${this.projectId}` : '/api/projects';
+                    // Collect project data from form inputs
+                    const projectElements = document.querySelectorAll('.project-item');
+                    
+                    if (projectElements.length === 0) {
+                        this.showAlert('At least one project is required', 'error');
+                        return;
+                    }
+
+                    const projects = [];
+                    
+                    for (let i = 0; i < projectElements.length; i++) {
+                        const projectElement = projectElements[i];
+                        const titleInput = projectElement.querySelector('input[type="text"]'); // First input is title
+                        const descriptionInput = projectElement.querySelector('textarea');
+                        
+                        const title = titleInput ? titleInput.value.trim() : '';
+                        const description = descriptionInput ? descriptionInput.value.trim() : '';
+                        
+                        if (!title) {
+                            this.showAlert(`Project ${i + 1} title is required`, 'error');
+                            return;
+                        }
+                        
+                        // Get links for this project
+                        const linkElements = projectElement.querySelectorAll('.link-item');
+                        const links = [];
+                        linkElements.forEach(linkElement => {
+                            const textInput = linkElement.children[0];
+                            const urlInput = linkElement.children[1];
+                            if (textInput.value.trim() && urlInput.value.trim()) {
+                                links.push({
+                                    text: textInput.value.trim(),
+                                    url: urlInput.value.trim()
+                                });
+                            }
+                        });
+                        
+                        // Get media for this project
+                        const projectIndex = parseInt(projectElement.dataset.projectIndex);
+                        const projectMedia = this.projects[projectIndex] ? this.projects[projectIndex].uploadedMedia || [] : [];
+                        
+                        projects.push({
+                            title: title,
+                            description: description,
+                            links: links,
+                            image_url: projectMedia.find(m => m.original.mimetype.startsWith('image/'))?.optimized?.url || 
+                                     projectMedia.find(m => m.original.mimetype.startsWith('image/'))?.original.url || '',
+                            video_url: projectMedia.find(m => m.original.mimetype.startsWith('video/'))?.original.url || ''
+                        });
+                    }
+
+                    const formData = {
+                        name: tooltipName,
+                        projects: projects,
+                        coordinates: this.coordinates
+                    };
+
+                    const url = this.isEditing ? `/api/projects/${this.itemId}` : '/api/projects';
                     const method = this.isEditing ? 'PUT' : 'POST';
 
+                    console.log('Sending data:', JSON.stringify(formData, null, 2));
+                    
                     const response = await fetch(url, {
                         method: method,
                         headers: {
@@ -822,22 +1120,24 @@
                         body: JSON.stringify(formData)
                     });
 
+                    console.log('Response status:', response.status);
                     const data = await response.json();
+                    console.log('Response data:', data);
 
                     if (data.success) {
-                        this.showAlert(`Project ${this.isEditing ? 'updated' : 'created'} successfully!`, 'success');
+                        this.showAlert(`Tooltip ${this.isEditing ? 'updated' : 'created'} successfully!`, 'success');
                         
                         // Redirect to dashboard after short delay
                         setTimeout(() => {
                             window.location.href = '/admin/dashboard';
                         }, 1500);
                     } else {
-                        this.showAlert(data.message || 'Failed to save project', 'error');
+                        this.showAlert(data.message || 'Failed to save tooltip', 'error');
                     }
 
                 } catch (error) {
                     console.error('Save failed:', error);
-                    this.showAlert('Failed to save project', 'error');
+                    this.showAlert('Failed to save tooltip', 'error');
                 }
             }
 
@@ -856,7 +1156,202 @@
                 }, 5000);
             }
 
+            setupProjectUploadAreas() {
+                // Set up upload areas for each project in region mode
+                document.addEventListener('click', (e) => {
+                    if (e.target.closest('.project-upload-area')) {
+                        const uploadArea = e.target.closest('.project-upload-area');
+                        const projectIndex = parseInt(uploadArea.dataset.projectIndex);
+                        const fileInput = uploadArea.querySelector('input[type="file"]');
+                        fileInput.click();
+                    }
+                });
+                
+                document.addEventListener('change', (e) => {
+                    if (e.target.closest('.project-upload-area')) {
+                        const uploadArea = e.target.closest('.project-upload-area');
+                        const projectIndex = parseInt(uploadArea.dataset.projectIndex);
+                        const files = Array.from(e.target.files);
+                        this.uploadProjectFiles(projectIndex, files);
+                    }
+                });
+                
+                document.addEventListener('dragover', (e) => {
+                    if (e.target.closest('.project-upload-area')) {
+                        e.preventDefault();
+                        e.target.closest('.project-upload-area').classList.add('dragover');
+                    }
+                });
+                
+                document.addEventListener('drop', (e) => {
+                    if (e.target.closest('.project-upload-area')) {
+                        e.preventDefault();
+                        const uploadArea = e.target.closest('.project-upload-area');
+                        uploadArea.classList.remove('dragover');
+                        const projectIndex = parseInt(uploadArea.dataset.projectIndex);
+                        const files = Array.from(e.dataTransfer.files);
+                        this.uploadProjectFiles(projectIndex, files);
+                    }
+                });
+            }
+
+            async uploadProjectFiles(projectIndex, files) {
+                const validFiles = files.filter(file => {
+                    return file.type.startsWith('image/') || file.type.startsWith('video/');
+                });
+
+                if (validFiles.length === 0) {
+                    this.showAlert('Please select valid image or video files', 'error');
+                    return;
+                }
+
+                for (const file of validFiles) {
+                    try {
+                        const formData = new FormData();
+                        formData.append('files', file);
+
+                        const response = await fetch('/api/upload/multiple', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            this.projects[projectIndex].uploadedMedia.push(...data.data);
+                            this.renderProjects();
+                            this.showAlert(`${file.name} uploaded successfully`, 'success');
+                        } else {
+                            throw new Error(data.message);
+                        }
+                    } catch (error) {
+                        console.error('Upload failed:', error);
+                        this.showAlert(`Failed to upload ${file.name}`, 'error');
+                    }
+                }
+            }
+
+            async loadItem(itemId) {
+                // This method loads either a tooltip or legacy single project
+                try {
+                    const response = await fetch(`/api/projects/${itemId}`);
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.message);
+                    }
+                    
+                    const item = data.data;
+                    
+                    console.log('Loaded item from API:', item);
+                    
+                    if (item.projects && Array.isArray(item.projects)) {
+                        // This is a tooltip with multiple projects
+                        console.log('Loading as tooltip format');
+                        this.tooltipName = item.name;
+                        
+                        // Initialize projects with required properties
+                        this.projects = item.projects.map((project, index) => ({
+                            id: index + 1,
+                            title: project.title || '',
+                            description: project.description || '',
+                            links: project.links || [],
+                            uploadedMedia: []
+                        }));
+                        
+                        // Add existing media to projects if available
+                        item.projects.forEach((project, index) => {
+                            if (project.image_url || project.video_url) {
+                                this.projects[index].uploadedMedia = [];
+                                if (project.image_url) {
+                                    this.projects[index].uploadedMedia.push({
+                                        original: { url: project.image_url, mimetype: 'image/jpeg' }
+                                    });
+                                }
+                                if (project.video_url) {
+                                    this.projects[index].uploadedMedia.push({
+                                        original: { url: project.video_url, mimetype: 'video/mp4' }
+                                    });
+                                }
+                            }
+                        });
+                        
+                        document.getElementById('tooltipName').value = this.tooltipName;
+                        this.renderProjects();
+                    } else {
+                        // This is a legacy single project - convert to tooltip format
+                        console.log('Loading legacy project, converting to tooltip format');
+                        this.tooltipName = item.title; // Use project title as tooltip name
+                        this.projects = [{
+                            id: 1,
+                            title: item.title,
+                            description: item.description,
+                            links: item.links || [],
+                            uploadedMedia: []
+                        }];
+                        
+                        // If legacy project has media, add it to the first project
+                        if (item.image_url || item.video_url) {
+                            this.projects[0].uploadedMedia = [];
+                            if (item.image_url) {
+                                this.projects[0].uploadedMedia.push({
+                                    original: { url: item.image_url, mimetype: 'image/jpeg' }
+                                });
+                            }
+                            if (item.video_url) {
+                                this.projects[0].uploadedMedia.push({
+                                    original: { url: item.video_url, mimetype: 'video/mp4' }
+                                });
+                            }
+                        }
+                        
+                        document.getElementById('tooltipName').value = this.tooltipName;
+                        this.renderProjects();
+                    }
+                    
+                    // Load coordinates
+                    if (item.coordinates) {
+                        this.coordinates = { ...item.coordinates };
+                        this.updateHotspotDisplay();
+                    }
+                    
+                } catch (error) {
+                    console.error('Failed to load item:', error);
+                    this.showAlert('Failed to load item data', 'error');
+                }
+            }
+
+            async loadTooltipForNewProject(tooltipId) {
+                // Load existing tooltip to add a new project to it
+                try {
+                    const response = await fetch(`/api/projects/${tooltipId}`);
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.message);
+                    }
+                    
+                    const tooltip = data.data;
+                    this.tooltipName = tooltip.name;
+                    this.projects = [...tooltip.projects];
+                    this.coordinates = { ...tooltip.coordinates };
+                    
+                    document.getElementById('tooltipName').value = this.tooltipName;
+                    document.getElementById('tooltipName').disabled = true; // Don't allow changing tooltip name
+                    
+                    // Add a new empty project
+                    this.addProject();
+                    
+                    this.updateHotspotDisplay();
+                    
+                } catch (error) {
+                    console.error('Failed to load tooltip:', error);
+                    this.showAlert('Failed to load tooltip data', 'error');
+                }
+            }
+
             escapeHtml(text) {
+                if (!text) return '';
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;

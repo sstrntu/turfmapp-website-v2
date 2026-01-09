@@ -134,12 +134,31 @@ const projectsDB = {
             db.all("SELECT * FROM projects ORDER BY created_at DESC", (err, rows) => {
                 if (err) reject(err);
                 else {
-                    // Parse JSON fields
-                    const projects = rows.map(project => ({
-                        ...project,
-                        links: project.links ? JSON.parse(project.links) : [],
-                        coordinates: project.coordinates ? JSON.parse(project.coordinates) : {}
-                    }));
+                    // Parse JSON fields and detect format
+                    const projects = rows.map(project => {
+                        const parsedLinks = project.links ? JSON.parse(project.links) : [];
+                        const coordinates = project.coordinates ? JSON.parse(project.coordinates) : {};
+                        
+                        // Check if this is a tooltip format (projects array stored in links field)
+                        if (Array.isArray(parsedLinks) && parsedLinks.length > 0 && parsedLinks[0].title) {
+                            // This is a tooltip format
+                            return {
+                                id: project.id,
+                                name: project.title, // Tooltip name stored in title field
+                                projects: parsedLinks, // Projects array stored in links field
+                                coordinates: coordinates,
+                                created_at: project.created_at,
+                                updated_at: project.updated_at
+                            };
+                        } else {
+                            // This is legacy single project format
+                            return {
+                                ...project,
+                                links: parsedLinks,
+                                coordinates: coordinates
+                            };
+                        }
+                    });
                     resolve(projects);
                 }
                 db.close();
@@ -154,12 +173,30 @@ const projectsDB = {
             db.get("SELECT * FROM projects WHERE id = ?", [id], (err, row) => {
                 if (err) reject(err);
                 else if (row) {
-                    const project = {
-                        ...row,
-                        links: row.links ? JSON.parse(row.links) : [],
-                        coordinates: row.coordinates ? JSON.parse(row.coordinates) : {}
-                    };
-                    resolve(project);
+                    const parsedLinks = row.links ? JSON.parse(row.links) : [];
+                    const coordinates = row.coordinates ? JSON.parse(row.coordinates) : {};
+                    
+                    // Check if this is a tooltip format (projects array stored in links field)
+                    if (Array.isArray(parsedLinks) && parsedLinks.length > 0 && parsedLinks[0].title) {
+                        // This is a tooltip format
+                        const project = {
+                            id: row.id,
+                            name: row.title, // Tooltip name stored in title field
+                            projects: parsedLinks, // Projects array stored in links field
+                            coordinates: coordinates,
+                            created_at: row.created_at,
+                            updated_at: row.updated_at
+                        };
+                        resolve(project);
+                    } else {
+                        // This is legacy single project format
+                        const project = {
+                            ...row,
+                            links: parsedLinks,
+                            coordinates: coordinates
+                        };
+                        resolve(project);
+                    }
                 } else {
                     resolve(null);
                 }
@@ -172,23 +209,47 @@ const projectsDB = {
     create: (projectData) => {
         return new Promise((resolve, reject) => {
             const db = getDatabase();
-            const { title, description, image_url, video_url, links, coordinates } = projectData;
             
-            db.run(`
-                INSERT INTO projects (title, description, image_url, video_url, links, coordinates)
-                VALUES (?, ?, ?, ?, ?, ?)
-            `, [
-                title,
-                description || '',
-                image_url || '',
-                video_url || '',
-                JSON.stringify(links || []),
-                JSON.stringify(coordinates || {})
-            ], function(err) {
-                if (err) reject(err);
-                else resolve(this.lastID);
-                db.close();
-            });
+            // Check if this is the new tooltip format
+            if (projectData.name && projectData.projects) {
+                // New tooltip format - store as JSON in title field and add special fields
+                const { name, projects, coordinates } = projectData;
+                
+                db.run(`
+                    INSERT INTO projects (title, description, image_url, video_url, links, coordinates)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                `, [
+                    name, // Store tooltip name in title field
+                    '', // Empty description for tooltip format
+                    '', // Empty image_url for tooltip format
+                    '', // Empty video_url for tooltip format
+                    JSON.stringify(projects), // Store projects array in links field
+                    JSON.stringify(coordinates || {})
+                ], function(err) {
+                    if (err) reject(err);
+                    else resolve(this.lastID);
+                    db.close();
+                });
+            } else {
+                // Legacy single project format
+                const { title, description, image_url, video_url, links, coordinates } = projectData;
+                
+                db.run(`
+                    INSERT INTO projects (title, description, image_url, video_url, links, coordinates)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                `, [
+                    title,
+                    description || '',
+                    image_url || '',
+                    video_url || '',
+                    JSON.stringify(links || []),
+                    JSON.stringify(coordinates || {})
+                ], function(err) {
+                    if (err) reject(err);
+                    else resolve(this.lastID);
+                    db.close();
+                });
+            }
         });
     },
 
@@ -196,25 +257,51 @@ const projectsDB = {
     update: (id, projectData) => {
         return new Promise((resolve, reject) => {
             const db = getDatabase();
-            const { title, description, image_url, video_url, links, coordinates } = projectData;
             
-            db.run(`
-                UPDATE projects 
-                SET title = ?, description = ?, image_url = ?, video_url = ?, links = ?, coordinates = ?
-                WHERE id = ?
-            `, [
-                title,
-                description || '',
-                image_url || '',
-                video_url || '',
-                JSON.stringify(links || []),
-                JSON.stringify(coordinates || {}),
-                id
-            ], function(err) {
-                if (err) reject(err);
-                else resolve(this.changes);
-                db.close();
-            });
+            // Check if this is the new tooltip format
+            if (projectData.name && projectData.projects) {
+                // New tooltip format - store as JSON in title field and add special fields
+                const { name, projects, coordinates } = projectData;
+                
+                db.run(`
+                    UPDATE projects 
+                    SET title = ?, description = ?, image_url = ?, video_url = ?, links = ?, coordinates = ?
+                    WHERE id = ?
+                `, [
+                    name, // Store tooltip name in title field
+                    '', // Empty description for tooltip format
+                    '', // Empty image_url for tooltip format
+                    '', // Empty video_url for tooltip format
+                    JSON.stringify(projects), // Store projects array in links field
+                    JSON.stringify(coordinates || {}),
+                    id
+                ], function(err) {
+                    if (err) reject(err);
+                    else resolve(this.changes);
+                    db.close();
+                });
+            } else {
+                // Legacy single project format
+                const { title, description, image_url, video_url, links, coordinates } = projectData;
+                
+                db.run(`
+                    UPDATE projects 
+                    SET title = ?, description = ?, image_url = ?, video_url = ?, links = ?, coordinates = ?
+                    WHERE id = ?
+                `, [
+                    title,
+                    description || '',
+                    image_url || '',
+                    video_url || '',
+                    JSON.stringify(links || []),
+                    JSON.stringify(coordinates || {}),
+                    id
+                ], function(err) {
+                    if (err) reject(err);
+                    else resolve(this.changes);
+                    db.close();
+                });
+            }
         });
     },
 
@@ -264,16 +351,29 @@ async function generateProjectsJSON() {
     try {
         const projects = await projectsDB.getAll();
         
-        // Convert to format expected by frontend
-        const projectsData = projects.map(project => ({
-            id: project.id.toString(),
-            title: project.title,
-            description: project.description,
-            links: project.links,
-            region: project.coordinates,
-            image_url: project.image_url,
-            video_url: project.video_url
-        }));
+        // Convert to format expected by frontend, preserving both tooltip and legacy formats
+        const projectsData = projects.map(item => {
+            if (item.projects && Array.isArray(item.projects)) {
+                // This is a tooltip format - preserve the structure
+                return {
+                    id: item.id.toString(),
+                    name: item.name,
+                    projects: item.projects,
+                    region: item.coordinates
+                };
+            } else {
+                // This is a legacy single project format
+                return {
+                    id: item.id.toString(),
+                    title: item.title,
+                    description: item.description,
+                    links: item.links,
+                    region: item.coordinates,
+                    image_url: item.image_url,
+                    video_url: item.video_url
+                };
+            }
+        });
 
         const outputPath = path.join(__dirname, '..', '..', 'data', 'projects.json');
         fs.writeFileSync(outputPath, JSON.stringify(projectsData, null, 2));

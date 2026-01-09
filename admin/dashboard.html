@@ -249,6 +249,86 @@
             font-size: 12px;
         }
 
+        /* Tooltip-specific styles */
+        .tooltip-card {
+            border-left: 4px solid #007bff;
+        }
+
+        .tooltip-header {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .tooltip-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #007bff;
+            margin-bottom: 0.25rem;
+        }
+
+        .tooltip-subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .tooltip-projects {
+            padding: 1rem;
+        }
+
+        .mini-project {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .mini-project:hover {
+            background: #f8f9fa;
+        }
+
+        .mini-project-image {
+            width: 40px;
+            height: 40px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #666;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .mini-project-info {
+            flex: 1;
+        }
+
+        .mini-project-title {
+            font-weight: 500;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .mini-project-type {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .project-count {
+            background: #007bff;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
         .empty-state {
             text-align: center;
             padding: 4rem 2rem;
@@ -414,7 +494,7 @@
             <div class="actions-bar">
                 <div class="actions-left">
                     <a href="/admin/editor" class="btn btn-primary">
-                        ➕ New Project
+                        ➕ New Tooltip
                     </a>
                     <button id="importBtn" class="btn btn-secondary">
                         📥 Import
@@ -427,7 +507,7 @@
                     </button>
                 </div>
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Search projects...">
+                    <input type="text" id="searchInput" placeholder="Search tooltips and projects...">
                 </div>
             </div>
 
@@ -435,9 +515,11 @@
             <div id="projectsContainer">
                 <div id="projectsGrid" class="projects-grid"></div>
                 <div id="emptyState" class="empty-state" style="display: none;">
-                    <h3>No Projects Yet</h3>
-                    <p>Start building your portfolio by creating your first project</p>
-                    <a href="/admin/editor" class="btn btn-primary">Create First Project</a>
+                    <h3>No Tooltips Yet</h3>
+                    <p>Start building your portfolio by creating your first tooltip with projects</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                        <a href="/admin/editor" class="btn btn-primary">Create First Tooltip</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -512,11 +594,26 @@
             }
 
             updateStats() {
-                document.getElementById('totalProjects').textContent = this.projects.length;
+                let totalItems = 0;
+                let totalProjects = 0;
+                
+                this.projects.forEach(item => {
+                    totalItems++;
+                    if (item.projects && Array.isArray(item.projects)) {
+                        // This is a region
+                        totalProjects += item.projects.length;
+                    } else {
+                        // This is a single project
+                        totalProjects++;
+                    }
+                });
+                
+                document.getElementById('totalProjects').textContent = `${totalProjects} (${totalItems} items)`;
                 
                 if (this.projects.length > 0) {
                     const latest = this.projects[0];
-                    document.getElementById('latestProject').textContent = latest.title;
+                    const latestName = latest.name || latest.title;
+                    document.getElementById('latestProject').textContent = latestName;
                     document.getElementById('latestProjectDate').textContent = 
                         `Created ${new Date(latest.created_at).toLocaleDateString()}`;
                 } else {
@@ -540,26 +637,88 @@
                 
                 emptyState.style.display = 'none';
                 
-                grid.innerHTML = this.filteredProjects.map(project => `
-                    <div class="project-card" data-project-id="${project.id}">
-                        <div class="project-image" ${project.image_url ? `style="background-image: url('${project.image_url}')"` : ''}>
-                            ${!project.image_url ? '📷 No image' : ''}
-                        </div>
-                        <div class="project-content">
-                            <div class="project-title">${this.escapeHtml(project.title)}</div>
-                            <div class="project-description">${this.escapeHtml(project.description || 'No description')}</div>
-                            <div class="project-meta">
-                                <span>Created: ${new Date(project.created_at).toLocaleDateString()}</span>
-                                <span>${project.links ? project.links.length : 0} links</span>
+                grid.innerHTML = this.filteredProjects.map(item => {
+                    if (item.projects && Array.isArray(item.projects)) {
+                        // This is a tooltip with projects (new format)
+                        return this.renderTooltipCard(item);
+                    } else {
+                        // This is a legacy single project - convert to tooltip format for display
+                        return this.renderLegacyProjectCard(item);
+                    }
+                }).join('');
+            }
+
+            renderLegacyProjectCard(project) {
+                // Render legacy single project as a tooltip with one project
+                return `
+                    <div class="project-card tooltip-card" data-project-id="${project.id}">
+                        <div class="tooltip-header">
+                            <div class="tooltip-title">
+                                💭 ${this.escapeHtml(project.title)}
+                                <span class="project-count">1</span>
                             </div>
-                            <div class="project-actions">
-                                <a href="/admin/editor?id=${project.id}" class="btn btn-primary btn-small">✏️ Edit</a>
-                                <button onclick="dashboard.duplicateProject(${project.id})" class="btn btn-secondary btn-small">📋 Duplicate</button>
+                            <div class="tooltip-subtitle">
+                                Legacy Project • Created: ${new Date(project.created_at).toLocaleDateString()}
+                            </div>
+                        </div>
+                        <div class="tooltip-projects">
+                            <div class="mini-project">
+                                <div class="mini-project-image" ${project.image_url || project.video_url ? 
+                                    `style="background-image: url('${project.image_url || project.video_url}')"` : ''}>
+                                    ${!project.image_url && !project.video_url ? '📷' : ''}
+                                </div>
+                                <div class="mini-project-info">
+                                    <div class="mini-project-title">${this.escapeHtml(project.title)}</div>
+                                    <div class="mini-project-type">
+                                        ${project.video_url ? '📹 Video' : project.image_url ? '📷 Image' : '📄 Text'}
+                                        ${project.links ? ` • ${project.links.length} links` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="project-actions" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                                <a href="/admin/editor?id=${project.id}" class="btn btn-primary btn-small">✏️ Edit Tooltip</a>
                                 <button onclick="dashboard.deleteProject(${project.id})" class="btn btn-danger btn-small">🗑️ Delete</button>
                             </div>
                         </div>
                     </div>
-                `).join('');
+                `;
+            }
+
+            renderTooltipCard(tooltip) {
+                return `
+                    <div class="project-card tooltip-card" data-project-id="${tooltip.id}">
+                        <div class="tooltip-header">
+                            <div class="tooltip-title">
+                                💭 ${this.escapeHtml(tooltip.name)}
+                                <span class="project-count">${tooltip.projects.length}</span>
+                            </div>
+                            <div class="tooltip-subtitle">
+                                Tooltip • Created: ${new Date(tooltip.created_at).toLocaleDateString()}
+                            </div>
+                        </div>
+                        <div class="tooltip-projects">
+                            ${tooltip.projects.map(project => `
+                                <div class="mini-project">
+                                    <div class="mini-project-image" ${project.image_url || project.video_url ? 
+                                        `style="background-image: url('${project.image_url || project.video_url}')"` : ''}>
+                                        ${!project.image_url && !project.video_url ? '📷' : ''}
+                                    </div>
+                                    <div class="mini-project-info">
+                                        <div class="mini-project-title">${this.escapeHtml(project.title)}</div>
+                                        <div class="mini-project-type">
+                                            ${project.video_url ? '📹 Video' : project.image_url ? '📷 Image' : '📄 Text'}
+                                            ${project.links ? ` • ${project.links.length} links` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                            <div class="project-actions" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                                <a href="/admin/editor?id=${tooltip.id}" class="btn btn-primary btn-small">✏️ Edit Tooltip</a>
+                                <button onclick="dashboard.deleteProject(${tooltip.id})" class="btn btn-danger btn-small">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
 
             setupEventListeners() {
@@ -584,13 +743,28 @@
                 if (!term) {
                     this.filteredProjects = [...this.projects];
                 } else {
-                    this.filteredProjects = this.projects.filter(project =>
-                        project.title.toLowerCase().includes(term) ||
-                        (project.description && project.description.toLowerCase().includes(term))
-                    );
+                    this.filteredProjects = this.projects.filter(item => {
+                        if (item.projects && Array.isArray(item.projects)) {
+                            // This is a tooltip - search in tooltip name and all projects
+                            return item.name.toLowerCase().includes(term) ||
+                                item.projects.some(project =>
+                                    project.title.toLowerCase().includes(term) ||
+                                    (project.description && project.description.toLowerCase().includes(term))
+                                );
+                        } else {
+                            // This is a legacy single project
+                            return item.title.toLowerCase().includes(term) ||
+                                (item.description && item.description.toLowerCase().includes(term));
+                        }
+                    });
                 }
                 
                 this.renderProjects();
+            }
+
+            addProjectToTooltip(tooltipId) {
+                // Redirect to editor in "add project to tooltip" mode
+                window.location.href = `/admin/editor?tooltipId=${tooltipId}&action=addProject`;
             }
 
             async deleteProject(id) {
