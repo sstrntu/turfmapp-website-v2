@@ -1,6 +1,6 @@
-# Portfolio CMS System
+# Turfmapp CMS System
 
-A complete Content Management System for your interactive portfolio with parallax effects and tooltip management.
+A complete Content Management System for the Turfmapp interactive portfolio with camera controls and tooltip management.
 
 ## 🚀 Quick Start
 

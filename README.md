@@ -1,87 +1,78 @@
-# Interactive 3D Portfolio Website
+# Turfmapp Interactive Portfolio
 
-A modern portfolio website featuring an interactive bird's-eye view map with 3D parallax effects and clickable project elements.
+A modern portfolio website featuring an interactive world map with camera controls and clickable project elements.
 
 ## Features
 
-- **3D Parallax Effect**: Mouse-controlled tilting (10-20 degrees) for immersive experience
+- **Camera Controls**: Mouse drag and edge movement for map exploration
 - **Interactive Map**: Clickable hotspots revealing project details via tooltips
+- **Smooth Movement**: 60fps camera controls with smooth interpolation  
+- **Admin Panel**: Complete CMS for managing projects and content
 - **Responsive Design**: Optimized for desktop and mobile devices
-- **Smooth Animations**: 60fps performance with hardware acceleration
 - **Accessibility**: Support for reduced motion preferences
 
 ## Technology Stack
 
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
-- **3D Effects**: CSS 3D transforms with JavaScript mouse tracking
-- **Styling**: Modern CSS with flexbox and grid
-- **Performance**: Throttled events and optimized animations
+- **Backend**: Node.js, Express.js
+- **Database**: SQLite with session management
+- **Authentication**: bcrypt password hashing
+- **File Upload**: Multer with Sharp image optimization
+- **Styling**: Modern CSS with responsive design
 
 ## Project Structure
 
 ```
 /
-├── index.html              # Main homepage
-├── styles/
-│   ├── main.css           # Core styles and layout
-│   ├── parallax.css       # 3D parallax effects
-│   └── tooltips.css       # Tooltip styling
-├── scripts/
-│   ├── main.js            # App initialization and utilities
-│   ├── parallax.js        # 3D mouse tracking system
-│   └── tooltips.js        # Interactive tooltip system
+├── index.html              # Main portfolio page
+├── server/                 # Backend server
+│   ├── app.js             # Express server
+│   └── models/            # Database models
+├── admin/                  # CMS admin panel
+│   ├── index.html         # Login page
+│   ├── dashboard.html     # Admin dashboard
+│   └── editor.html        # Project editor
 ├── assets/
-│   ├── images/
-│   │   └── portfolio-map.jpg  # Main map image
-│   └── data/
-│       └── projects.json  # Project information
-└── README.md
+│   └── images/
+│       └── TM-world.png   # World map image
+├── data/                  # Database and JSON files
+└── uploads/               # User uploaded content
 ```
 
 ## Getting Started
 
-1. **Setup**: Simply open `index.html` in a modern web browser
-2. **Map Image**: Replace `assets/images/portfolio-map.jpg` with your custom map
-3. **Project Data**: Edit `scripts/main.js` or `assets/data/projects.json` to add your projects
-4. **Hotspot Positioning**: Adjust the `style` attributes on `.project-hotspot` elements in `index.html`
-
-## Customization
-
-### Adding Projects
-
-Edit the `projectData` object in `scripts/main.js`:
-
-```javascript
-const projectData = {
-    projectX: {
-        title: "Your Project Title",
-        description: "Project description...",
-        tech: ["Technology", "Stack"],
-        liveUrl: "https://your-live-demo.com",
-        githubUrl: "https://github.com/username/repo"
-    }
-};
+### 1. Install Dependencies
+```bash
+npm install
 ```
 
-### Positioning Hotspots
-
-Adjust the `top` and `left` CSS properties on hotspot elements:
-
-```html
-<div class="project-hotspot" data-project="projectX" style="top: 30%; left: 50%;">
-    <div class="hotspot-marker"></div>
-</div>
+### 2. Setup Database
+```bash
+npm run setup
 ```
 
-### Parallax Settings
-
-Modify parallax behavior in `scripts/parallax.js`:
-
-```javascript
-this.maxTilt = 15;        // Maximum tilt in degrees
-this.sensitivity = 0.5;   // Mouse sensitivity
-this.smoothing = 0.1;     // Animation smoothness
+### 3. Start Development Server
+```bash
+npm run dev
 ```
+
+### 4. Access Application
+- **Portfolio**: http://localhost:3000
+- **Admin Panel**: http://localhost:3000/admin
+- **Default Login**: admin / admin123
+
+## Admin Panel Features
+
+### Project Management
+- Add, edit, and delete portfolio projects
+- Interactive coordinate picker for hotspot positioning
+- Upload images and videos with automatic optimization
+- Set project titles, descriptions, and external links
+
+### Authentication
+- Secure login system with bcrypt password hashing
+- Session-based authentication
+- Admin-only access to management features
 
 ## Browser Support
 
@@ -92,11 +83,12 @@ this.smoothing = 0.1;     // Animation smoothness
 
 ## Performance Notes
 
-- 3D parallax is disabled on touch devices for better performance
-- Animations respect `prefers-reduced-motion` accessibility setting
-- Uses `requestAnimationFrame` for smooth 60fps animations
-- Throttled mouse events to prevent performance issues
+- Smooth camera controls with optimized interpolation
+- Respects `prefers-reduced-motion` accessibility setting  
+- Uses `requestAnimationFrame` for 60fps animations
+- Optimized image handling with Sharp compression
+- SQLite database for lightweight data storage
 
 ## License
 
-Open source - feel free to use and modify for your own portfolio!
+MIT License - feel free to use and modify for your own projects!

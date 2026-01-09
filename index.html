@@ -1,23 +1,21 @@
 <!DOCTYPE html>
 <!--
-Big World Map Camera System
-===========================
+Turfmapp Interactive Portfolio
+==============================
 
-Camera system for exploring a large world map (TM-world.png).
+Interactive map-based portfolio showcasing projects with camera controls.
 
 Features:
 - 12.5% zoom into the center of the map initially
-- Camera panning controls (up/down/left/right movement)
-- Single layer - no parallax for now
+- Camera panning controls (drag and edge movement)
 - Smooth camera movement with mouse/touch drag
-- Edge movement when cursor approaches screen edges
-- Tooltip system for interactive elements
+- Tooltip system for interactive project elements
+- Admin panel for content management
 
-Camera Controls:
-- Starts zoomed 12.5% into center of map
+Controls:
 - Mouse/Touch drag to pan camera around the world
 - Move cursor to screen edges for automatic camera movement
-- Smooth interpolation for premium feel
+- Click hotspots to view project details
 
 Debug Mode: Press 'D' to show camera position
 -->
@@ -26,7 +24,7 @@ Debug Mode: Press 'D' to show camera position
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GT7-Style Interactive Portfolio</title>
+    <title>Turfmapp Interactive Portfolio</title>
     <style>
         /* CSS Reset and Base Styles */
         * {
@@ -43,45 +41,24 @@ Debug Mode: Press 'D' to show camera position
             background: #000;
         }
 
-        /* Hero Container - Full viewport with perspective */
+        /* Main Container - Full viewport */
         .hero-container {
             width: 100vw;
             height: 100vh;
             position: relative;
-            perspective: 1200px;
-            perspective-origin: center center;
             overflow: hidden;
         }
 
-        .parallax-scene {
+        .camera-scene {
             width: 100%;
             height: 100%;
             position: relative;
-            will-change: transform;
             background: #000;
             cursor: grab;
         }
 
-        .parallax-scene.tooltip-active {
+        .camera-scene.tooltip-active {
             cursor: default;
-        }
-
-        /* Individual layer containers */
-        .parallax-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            will-change: transform;
-        }
-
-        .background-layer {
-            z-index: 1;
-        }
-
-        .structures-layer {
-            z-index: 2;
         }
 
         /* World map styling for camera system */
@@ -116,7 +93,7 @@ Debug Mode: Press 'D' to show camera position
             z-index: 3;
         }
 
-        /* GT7-Style Hotspot Styling */
+        /* Hotspot Styling */
         .hotspot {
             position: absolute;
             background: radial-gradient(circle, rgba(0, 150, 255, 0.8) 0%, rgba(0, 150, 255, 0.4) 70%, transparent 100%);
@@ -129,13 +106,13 @@ Debug Mode: Press 'D' to show camera position
             padding: 4px;
             box-sizing: border-box;
 
-            /* GT7-style glow effect */
+            /* Interactive glow effect */
             box-shadow:
                 0 0 12px rgba(0, 150, 255, 0.3),
                 0 0 24px rgba(0, 150, 255, 0.1);
 
-            /* Subtle pulse animation for GT7 feel */
-            animation: gt7-pulse 2s ease-in-out infinite;
+            /* Subtle pulse animation */
+            animation: pulse-glow 2s ease-in-out infinite;
             /* Prevent any layout shifts */
             will-change: background;
             contain: layout style;
@@ -458,8 +435,8 @@ Debug Mode: Press 'D' to show camera position
         }
 
 
-        /* GT7-style pulse animation */
-        @keyframes gt7-pulse {
+        /* Pulse animation */
+        @keyframes pulse-glow {
 
             0%,
             100% {
@@ -475,7 +452,7 @@ Debug Mode: Press 'D' to show camera position
             }
         }
 
-        /* GT7-inspired hotspot hover effects */
+        /* Hotspot hover effects */
         .hotspot {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -505,9 +482,9 @@ Debug Mode: Press 'D' to show camera position
         /* Reduced motion support */
         @media (prefers-reduced-motion: reduce) {
 
-            .parallax-scene,
-            .parallax-layer,
-            .layer-image {
+            .camera-scene,
+            .world-layer,
+            .world-image {
                 transition: none !important;
                 will-change: auto !important;
             }
@@ -595,7 +572,7 @@ Debug Mode: Press 'D' to show camera position
     </div>
 
     <div class="hero-container">
-        <div class="parallax-scene" id="parallaxScene">
+        <div class="camera-scene" id="cameraScene">
             <!-- World Map Layer -->
             <div class="world-layer" id="worldLayer">
                 <img src="assets/images/TM-world.png" alt="World Map" class="world-image" id="worldImage"
@@ -651,9 +628,9 @@ Debug Mode: Press 'D' to show camera position
         // Project data will be loaded dynamically from API
         let projectsData = [];
 
-        class ParallaxHero {
+        class CameraController {
             constructor() {
-                this.scene = document.getElementById('parallaxScene');
+                this.scene = document.getElementById('cameraScene');
                 this.worldLayer = document.getElementById('worldLayer');
                 this.worldImage = document.getElementById('worldImage');
                 this.hotspotsOverlay = document.getElementById('hotspotsOverlay');
@@ -1096,13 +1073,13 @@ Debug Mode: Press 'D' to show camera position
                     // Click handler
                     hotspot.addEventListener('click', () => this.showTooltip(project, hotspot));
 
-                    // Hover handlers to disable/enable parallax (using capture for immediate response)
-                    hotspot.addEventListener('mouseenter', () => this.disableParallax(), true);
-                    hotspot.addEventListener('mouseleave', () => this.enableParallax(), true);
+                    // Hover handlers for interaction feedback
+                    hotspot.addEventListener('mouseenter', () => this.disableMovement(), true);
+                    hotspot.addEventListener('mouseleave', () => this.enableMovement(), true);
 
                     // Also add pointer events for more reliable detection
-                    hotspot.addEventListener('pointerenter', () => this.disableParallax());
-                    hotspot.addEventListener('pointerleave', () => this.enableParallax());
+                    hotspot.addEventListener('pointerenter', () => this.disableMovement());
+                    hotspot.addEventListener('pointerleave', () => this.enableMovement());
 
                     this.hotspotsOverlay.appendChild(hotspot);
                 });
@@ -1143,9 +1120,9 @@ Debug Mode: Press 'D' to show camera position
                     }
                 });
 
-                // Disable parallax when hovering tooltip
-                tooltip.addEventListener('mouseenter', () => this.disableParallax());
-                tooltip.addEventListener('mouseleave', () => this.enableParallax());
+                // Disable movement when hovering tooltip
+                tooltip.addEventListener('mouseenter', () => this.disableMovement());
+                tooltip.addEventListener('mouseleave', () => this.enableMovement());
             }
 
             showTooltip(project, hotspot) {
@@ -1192,8 +1169,8 @@ Debug Mode: Press 'D' to show camera position
                 // Position tooltip near hotspot (this sets the position class)
                 this.positionTooltip(tooltip, hotspot);
 
-                // Disable parallax when tooltip is shown
-                this.disableParallax();
+                // Disable movement when tooltip is shown
+                this.disableMovement();
                 this.scene.classList.add('tooltip-active');
 
                 // Show tooltip immediately after positioning
@@ -1222,23 +1199,23 @@ Debug Mode: Press 'D' to show camera position
                 connectionLine.style.width = '';
                 connectionLine.style.transform = '';
 
-                // Re-enable parallax when tooltip is hidden
-                this.enableParallax();
+                // Re-enable movement when tooltip is hidden
+                this.enableMovement();
                 this.scene.classList.remove('tooltip-active');
             }
 
-            disableParallax() {
+            disableMovement() {
                 // Disable all camera movement when tooltip is active
-                this.parallaxDisabled = true;
+                this.movementDisabled = true;
             }
 
-            enableParallax() {
+            enableMovement() {
                 // Only enable if no tooltip is visible and no hotspot is being hovered
                 const tooltip = document.getElementById('projectTooltip');
                 const hoveredHotspot = document.querySelector('.hotspot:hover');
 
                 if (!tooltip.classList.contains('visible') && !hoveredHotspot) {
-                    this.parallaxDisabled = false;
+                    this.movementDisabled = false;
                 }
             }
 
@@ -1396,9 +1373,9 @@ Debug Mode: Press 'D' to show camera position
             }
         }
 
-        // Initialize the parallax hero when DOM is loaded
+        // Initialize the camera controller when DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
-            new ParallaxHero();
+            new CameraController();
         });
 
         // Accessibility: Announce to screen readers
