@@ -305,7 +305,7 @@ Debug Mode: Press 'D' to show camera position
         /* Tooltip Styles - Multi-Project Layout */
         .tooltip {
             position: fixed;
-            background: rgba(0, 0, 0, 0.95);
+            background: #1A1818;
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 12px;
@@ -385,6 +385,37 @@ Debug Mode: Press 'D' to show camera position
             font-weight: 600;
             margin: 0 0 8px 0;
             line-height: 1.3;
+            transition: opacity 0.2s ease;
+        }
+
+        .project-title:hover {
+            opacity: 0.8;
+        }
+
+        .project-description {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            margin: 0 0 12px 0;
+            line-height: 1.5;
+        }
+
+        .project-links {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .project-link {
+            color: #007BFF;
+            font-size: 13px;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .project-link:hover {
+            color: #0056b3;
+            text-decoration: underline;
         }
 
         .project-media {
@@ -394,6 +425,11 @@ Debug Mode: Press 'D' to show camera position
             overflow: hidden;
             cursor: pointer;
             transition: transform 0.2s ease;
+            margin-bottom: 8px;
+        }
+
+        .project-media:last-of-type {
+            margin-bottom: 0;
         }
 
         .project-media:hover {
@@ -410,43 +446,9 @@ Debug Mode: Press 'D' to show camera position
             background: #000;
         }
 
-        .media-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-
-        .project-media:hover .media-overlay {
-            opacity: 1;
-        }
-
-        .media-icon {
-            width: 32px;
-            height: 32px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #333;
-            font-size: 14px;
-        }
-
-        .video-play-icon::before {
-            content: '▶';
-            margin-left: 2px;
-        }
-
-        .image-view-icon::before {
-            content: '👁';
+        .project-media iframe {
+            display: block;
+            border: none;
         }
 
         /* Video Player Modal */
@@ -633,6 +635,139 @@ Debug Mode: Press 'D' to show camera position
             }
         }
 
+        /* Mobile Tooltip Modal */
+        @media (max-width: 1024px) {
+            /* Hide desktop tooltip and connection line on mobile */
+            .tooltip.visible {
+                display: none;
+            }
+
+            .connection-line {
+                display: none !important;
+            }
+
+            /* Mobile modal backdrop */
+            .mobile-modal-backdrop {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.85);
+                z-index: 3000;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s ease, visibility 0.3s ease;
+            }
+
+            .mobile-modal-backdrop.visible {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            /* Mobile modal container */
+            .mobile-modal {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0.9);
+                width: 90vw;
+                max-width: 500px;
+                max-height: 85vh;
+                background: #1A1818;
+                border-radius: 16px;
+                z-index: 3001;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+
+            .mobile-modal.visible {
+                opacity: 1;
+                visibility: visible;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            /* Modal header with close button */
+            .mobile-modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                flex-shrink: 0;
+            }
+
+            .mobile-modal-title {
+                font-size: 18px;
+                font-weight: 600;
+                color: white;
+                margin: 0;
+            }
+
+            .mobile-modal-close {
+                background: none;
+                border: none;
+                color: rgba(255, 255, 255, 0.7);
+                font-size: 28px;
+                cursor: pointer;
+                padding: 0;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: color 0.2s ease;
+            }
+
+            .mobile-modal-close:hover,
+            .mobile-modal-close:active {
+                color: white;
+            }
+
+            /* Modal content area (scrollable) */
+            .mobile-modal-content {
+                flex: 1;
+                overflow-y: auto;
+                padding: 20px;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Larger hotspots for touch */
+            .hotspot {
+                width: 44px !important;
+                height: 44px !important;
+            }
+
+            .hotspot::after {
+                width: 20px;
+                height: 20px;
+            }
+        }
+
+        /* Zoom Debug Display */
+        .zoom-debug {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            z-index: 10000;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+        }
+
+        .zoom-debug strong {
+            color: #00ff00;
+        }
+
         /* Loading overlay */
         .loading-overlay {
             position: fixed;
@@ -685,6 +820,11 @@ Debug Mode: Press 'D' to show camera position
         </div>
     </div>
 
+    <!-- Zoom Debug Display -->
+    <div class="zoom-debug" id="zoomDebug">
+        Zoom: <strong id="zoomValue">0.00</strong>
+    </div>
+
     <div class="hero-container">
         <div class="camera-scene" id="cameraScene">
             <!-- World Map Layer -->
@@ -725,6 +865,16 @@ Debug Mode: Press 'D' to show camera position
         <div class="tooltip-content" id="tooltipContent">
             <!-- Projects will be dynamically inserted -->
         </div>
+    </div>
+
+    <!-- Mobile Modal (hidden by default, shown on mobile) -->
+    <div id="mobileModalBackdrop" class="mobile-modal-backdrop"></div>
+    <div id="mobileModal" class="mobile-modal">
+        <div class="mobile-modal-header">
+            <h2 id="mobileModalTitle" class="mobile-modal-title"></h2>
+            <button id="mobileModalClose" class="mobile-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div id="mobileModalContent" class="mobile-modal-content"></div>
     </div>
 
     <!-- Video Player Modal -->
@@ -796,17 +946,20 @@ Debug Mode: Press 'D' to show camera position
                 this.worldImage = document.getElementById('worldImage');
                 this.hotspotsOverlay = document.getElementById('hotspotsOverlay');
 
+                // Detect mobile/tablet devices
+                this.isMobile = this.detectMobile();
+
                 // Camera System Constants for TM-world.png
                 this.motionConfig = {
-                    zoomScale: 0.5,      // 12.5% zoom = 0.5x scale (4x more zoomed out from original)
+                    zoomScale: this.isMobile ? 0.25 : 0.5,      // 25% mobile, 50% desktop
                     maxCameraX: 0,       // Will be calculated based on image size
                     maxCameraY: 0,       // Will be calculated based on image size
                     lerpFactor: 0.08,    // Smooth camera movement
                     dragSensitivity: 1.0,
-                    
+
                     // Edge movement settings
-                    edgeZone: 50,        // Pixels from edge to trigger movement
-                    edgeSpeed: 3.0       // Movement speed when cursor is at edge
+                    edgeZone: this.isMobile ? 30 : 50,        // Smaller zones on mobile
+                    edgeSpeed: this.isMobile ? 2.0 : 3.0      // Slower speed on mobile
                 };
 
                 // Camera position state
@@ -825,6 +978,18 @@ Debug Mode: Press 'D' to show camera position
                     startCameraX: 0,
                     startCameraY: 0
                 };
+
+                // Pinch-to-zoom state (mobile only)
+                this.pinchState = {
+                    isActive: false,
+                    startDistance: 0,
+                    startZoom: 0
+                };
+
+                // Current zoom level (dynamic on mobile, fixed on desktop)
+                this.currentZoom = this.motionConfig.zoomScale;
+                this.minZoom = 0.25;  // Maximum zoom out (shows full map)
+                this.maxZoom = 1.0;   // Maximum zoom in (adjust based on image quality)
 
                 // Image dimensions
                 this.imageRect = { width: 0, height: 0 };
@@ -986,15 +1151,24 @@ Debug Mode: Press 'D' to show camera position
             }
 
             handleTouchStart(e) {
-                if (e.touches.length === 1) {
-                    // Check if tooltip is visible - if so, don't allow dragging
-                    const tooltip = document.getElementById('projectTooltip');
-                    if (tooltip && tooltip.classList.contains('visible')) {
-                        return;
-                    }
-                    
-                    // Don't preventDefault here as it might block button clicks
-                    // handleTouchMove will handle preventDefault
+                // Check if tooltip/modal is visible
+                const tooltip = document.getElementById('projectTooltip');
+                const modal = document.getElementById('mobileModal');
+                if ((tooltip && tooltip.classList.contains('visible')) ||
+                    (modal && modal.classList.contains('visible'))) {
+                    return;
+                }
+
+                if (e.touches.length === 2 && this.isMobile) {
+                    // Two-finger pinch to zoom (mobile only)
+                    e.preventDefault();
+                    const distance = this.getTouchDistance(e.touches[0], e.touches[1]);
+                    this.pinchState.isActive = true;
+                    this.pinchState.startDistance = distance;
+                    this.pinchState.startZoom = this.currentZoom;
+                    this.dragState.isActive = false; // Cancel drag if active
+                } else if (e.touches.length === 1) {
+                    // Single-finger drag
                     const touch = e.touches[0];
                     this.initDrag(touch.clientX, touch.clientY);
                 }
@@ -1015,10 +1189,28 @@ Debug Mode: Press 'D' to show camera position
             }
 
             handleTouchMove(e) {
-                if (!this.dragState.isActive || e.touches.length !== 1) return;
-                e.preventDefault();
-                const touch = e.touches[0];
-                this.updateDrag(touch.clientX, touch.clientY);
+                if (e.touches.length === 2 && this.pinchState.isActive && this.isMobile) {
+                    // Handle pinch zoom
+                    e.preventDefault();
+                    const currentDistance = this.getTouchDistance(e.touches[0], e.touches[1]);
+                    const scale = currentDistance / this.pinchState.startDistance;
+
+                    // Calculate new zoom level
+                    let newZoom = this.pinchState.startZoom * scale;
+
+                    // Clamp zoom to min/max limits
+                    newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, newZoom));
+
+                    // Apply zoom
+                    this.currentZoom = newZoom;
+                    this.calculateCameraBounds();
+                    this.applyTransforms();
+                } else if (e.touches.length === 1 && this.dragState.isActive) {
+                    // Handle drag
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    this.updateDrag(touch.clientX, touch.clientY);
+                }
             }
 
             updateDrag(x, y) {
@@ -1036,16 +1228,35 @@ Debug Mode: Press 'D' to show camera position
 
             handleDragEnd() {
                 this.dragState.isActive = false;
+                this.pinchState.isActive = false;
                 this.scene.style.cursor = 'grab';
             }
 
             handleResize() {
+                // Update mobile detection
+                const wasMobile = this.isMobile;
+                this.isMobile = this.detectMobile();
+
+                // Update zoom scale and edge settings if device type changed
+                if (wasMobile !== this.isMobile) {
+                    this.motionConfig.zoomScale = this.isMobile ? 0.25 : 0.5;
+                    this.currentZoom = this.motionConfig.zoomScale;  // Reset zoom on device change
+                    this.motionConfig.edgeZone = this.isMobile ? 30 : 50;
+                    this.motionConfig.edgeSpeed = this.isMobile ? 2.0 : 3.0;
+                }
+
                 this.updateImageRect();
                 this.updateHotspots();
-                
+
                 if (this.debugMode) {
                     this.setupDebugEdgeZones();
                 }
+            }
+
+            getTouchDistance(touch1, touch2) {
+                const dx = touch2.clientX - touch1.clientX;
+                const dy = touch2.clientY - touch1.clientY;
+                return Math.sqrt(dx * dx + dy * dy);
             }
 
             handleMouseMove(e) {
@@ -1185,13 +1396,29 @@ Debug Mode: Press 'D' to show camera position
             applyTransforms() {
                 const moveX = -this.camera.x;
                 const moveY = -this.camera.y;
-                const scale = this.motionConfig.zoomScale;
+                const scale = this.currentZoom;  // Use dynamic zoom level
 
                 // Apply camera movement to both image and hotspots
                 const transform = `translate(-50%, -50%) translate(${moveX}px, ${moveY}px) scale(${scale})`;
 
                 this.worldImage.style.transform = transform;
                 this.hotspotsOverlay.style.transform = transform;
+
+                // Update zoom debug display
+                this.updateZoomDebug();
+            }
+
+            detectMobile() {
+                // Detect mobile/tablet devices (up to 1024px width)
+                return window.innerWidth <= 1024 ||
+                       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            }
+
+            updateZoomDebug() {
+                const zoomDebug = document.getElementById('zoomValue');
+                if (zoomDebug) {
+                    zoomDebug.textContent = this.currentZoom.toFixed(2);
+                }
             }
 
             calculateCameraBounds() {
@@ -1202,9 +1429,9 @@ Debug Mode: Press 'D' to show camera position
 
                 if (!iw || !ih || !cw || !ch) return;
 
-                // Calculate how much we can move the camera at 12.5% zoom (0.5x scale)
-                const scaledImageWidth = iw * this.motionConfig.zoomScale;
-                const scaledImageHeight = ih * this.motionConfig.zoomScale;
+                // Calculate how much we can move the camera at current zoom level
+                const scaledImageWidth = iw * this.currentZoom;
+                const scaledImageHeight = ih * this.currentZoom;
                 
                 // Maximum camera movement is half the difference between scaled image and viewport
                 this.motionConfig.maxCameraX = Math.max(0, (scaledImageWidth - cw) / 2);
@@ -1340,6 +1567,12 @@ Debug Mode: Press 'D' to show camera position
             }
 
             showRegionTooltip(tooltipData, hotspot) {
+                // Check if mobile - show modal instead of tooltip
+                if (this.isMobile) {
+                    this.showMobileModal(tooltipData);
+                    return;
+                }
+
                 const tooltip = document.getElementById('projectTooltip');
                 const connectionLine = document.getElementById('connectionLine');
                 const tooltipTitle = document.getElementById('tooltipRegionTitle');
@@ -1364,57 +1597,35 @@ Debug Mode: Press 'D' to show camera position
                 tooltipData.projects.forEach(project => {
                     const projectItem = document.createElement('div');
                     projectItem.className = 'project-item';
-                    
+
+                    const hasLink = project.links && project.links.length > 0;
+
                     // Create project title
                     const title = document.createElement('h3');
                     title.className = 'project-title';
-                    title.textContent = project.title || 'Untitled Project';
-                    projectItem.appendChild(title);
 
-                    // Create media container if there's media
-                    if (project.image_url || project.video_url) {
-                        const mediaContainer = document.createElement('div');
-                        mediaContainer.className = 'project-media';
-                        
-                        // Use video if available, otherwise use image
-                        const mediaUrl = project.video_url || project.image_url;
-                        const isVideo = !!project.video_url;
-                        
-                        if (isVideo) {
-                            const video = document.createElement('video');
-                            video.src = mediaUrl;
-                            video.muted = true;
-                            video.preload = 'metadata';
-                            mediaContainer.appendChild(video);
-                            
-                            // Add overlay with play icon
-                            const overlay = document.createElement('div');
-                            overlay.className = 'media-overlay';
-                            overlay.innerHTML = '<div class="media-icon">▶</div>';
-                            mediaContainer.appendChild(overlay);
-                            
-                            // Click handler for video
-                            mediaContainer.addEventListener('click', () => {
-                                this.openVideoModal(mediaUrl);
-                            });
-                        } else {
-                            const img = document.createElement('img');
-                            img.src = mediaUrl;
-                            img.alt = project.title;
-                            mediaContainer.appendChild(img);
-                            
-                            // No overlay for images - direct click
-                            
-                            // Click handler for image (navigate to another page)
-                            mediaContainer.addEventListener('click', () => {
-                                this.openImagePage(project);
-                            });
-                        }
-                        
-                        projectItem.appendChild(mediaContainer);
+                    // Add partner label based on 'under' field
+                    let titleText = project.title || 'Untitled Project';
+                    const under = project.under || 'Turfmapp';
+
+                    if (under !== 'Turfmapp') {
+                        titleText += ` - Partnered with ${under}`;
                     }
 
-                    // Add project description if available
+                    title.textContent = titleText;
+
+                    // Make title clickable if there's a link
+                    if (hasLink) {
+                        title.style.cursor = 'pointer';
+                        title.style.textDecoration = 'underline';
+                        title.addEventListener('click', () => {
+                            window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
+                        });
+                    }
+
+                    projectItem.appendChild(title);
+
+                    // Add project description right after title
                     if (project.description) {
                         const description = document.createElement('p');
                         description.className = 'project-description';
@@ -1422,11 +1633,120 @@ Debug Mode: Press 'D' to show camera position
                         projectItem.appendChild(description);
                     }
 
-                    // Add project links if available
-                    if (project.links && project.links.length > 0) {
+                    // Display YouTube video if available (highest priority)
+                    if (project.youtube_url) {
+                        const mediaContainer = document.createElement('div');
+                        mediaContainer.className = 'project-media';
+
+                        const youtubeId = this.getYouTubeVideoId(project.youtube_url);
+                        if (youtubeId) {
+                            const iframe = document.createElement('iframe');
+                            iframe.src = `https://www.youtube.com/embed/${youtubeId}`;
+                            iframe.setAttribute('frameborder', '0');
+                            iframe.setAttribute('allowfullscreen', '');
+                            iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+                            iframe.style.width = '100%';
+                            iframe.style.height = '200px';
+                            iframe.style.borderRadius = '8px';
+                            mediaContainer.appendChild(iframe);
+
+                            if (hasLink) {
+                                mediaContainer.style.cursor = 'pointer';
+                                mediaContainer.addEventListener('click', (e) => {
+                                    if (e.target === mediaContainer) {
+                                        window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
+                                    }
+                                });
+                            }
+
+                            projectItem.appendChild(mediaContainer);
+                        }
+                    }
+
+                    // Display all media from media array (new format)
+                    if (project.media && Array.isArray(project.media) && project.media.length > 0) {
+                        project.media.forEach(mediaItem => {
+                            const mediaContainer = document.createElement('div');
+                            mediaContainer.className = 'project-media';
+
+                            if (mediaItem.type === 'video') {
+                                const video = document.createElement('video');
+                                video.src = mediaItem.url;
+                                video.muted = true;
+                                video.preload = 'metadata';
+                                mediaContainer.appendChild(video);
+
+                                mediaContainer.addEventListener('click', () => {
+                                    if (hasLink) {
+                                        window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
+                                    } else {
+                                        this.openVideoModal(mediaItem.url);
+                                    }
+                                });
+                            } else {
+                                const img = document.createElement('img');
+                                img.src = mediaItem.url;
+                                img.alt = project.title;
+                                mediaContainer.appendChild(img);
+
+                                mediaContainer.addEventListener('click', () => {
+                                    if (hasLink) {
+                                        window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
+                                    } else {
+                                        this.openImagePage(project);
+                                    }
+                                });
+                            }
+
+                            projectItem.appendChild(mediaContainer);
+                        });
+                    } else if (project.image_url || project.video_url) {
+                        // Fallback: Display single media (old format for backward compatibility)
+                        const mediaContainer = document.createElement('div');
+                        mediaContainer.className = 'project-media';
+
+                        const mediaUrl = project.video_url || project.image_url;
+                        const isVideo = !!project.video_url;
+
+                        if (isVideo) {
+                            const video = document.createElement('video');
+                            video.src = mediaUrl;
+                            video.muted = true;
+                            video.preload = 'metadata';
+                            mediaContainer.appendChild(video);
+
+                            mediaContainer.addEventListener('click', () => {
+                                if (hasLink) {
+                                    window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
+                                } else {
+                                    this.openVideoModal(mediaUrl);
+                                }
+                            });
+                        } else {
+                            const img = document.createElement('img');
+                            img.src = mediaUrl;
+                            img.alt = project.title;
+                            mediaContainer.appendChild(img);
+
+                            mediaContainer.addEventListener('click', () => {
+                                if (hasLink) {
+                                    window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
+                                } else {
+                                    this.openImagePage(project);
+                                }
+                            });
+                        }
+
+                        projectItem.appendChild(mediaContainer);
+                    }
+
+                    // Add project links as text ONLY if there's no media
+                    // (If media exists, links are embedded in the media)
+                    const hasMedia = project.youtube_url || (project.media && project.media.length > 0) || project.image_url || project.video_url;
+                    if (!hasMedia && project.links && project.links.length > 0) {
                         const linksContainer = document.createElement('div');
                         linksContainer.className = 'project-links';
-                        
+
                         project.links.forEach(link => {
                             const linkEl = document.createElement('a');
                             linkEl.href = link.url;
@@ -1436,7 +1756,7 @@ Debug Mode: Press 'D' to show camera position
                             linkEl.rel = 'noopener noreferrer';
                             linksContainer.appendChild(linkEl);
                         });
-                        
+
                         projectItem.appendChild(linksContainer);
                     }
 
@@ -1461,6 +1781,214 @@ Debug Mode: Press 'D' to show camera position
                 setTimeout(() => {
                     this.showConnectionLine(hotspot, tooltip);
                 }, 200);
+            }
+
+            showMobileModal(tooltipData) {
+                const backdrop = document.getElementById('mobileModalBackdrop');
+                const modal = document.getElementById('mobileModal');
+                const modalTitle = document.getElementById('mobileModalTitle');
+                const modalContent = document.getElementById('mobileModalContent');
+                const closeBtn = document.getElementById('mobileModalClose');
+
+                // Set title
+                modalTitle.textContent = tooltipData.name || "Project";
+
+                // Clear and populate content (reuse existing project rendering logic)
+                modalContent.innerHTML = '';
+
+                if (!tooltipData.projects || !Array.isArray(tooltipData.projects)) {
+                    tooltipData.projects = [];
+                }
+
+                // Render projects (same logic as desktop tooltip)
+                tooltipData.projects.forEach(project => {
+                    const projectItem = document.createElement('div');
+                    projectItem.className = 'project-item';
+
+                    const hasLink = project.links && project.links.length > 0;
+
+                    // Create project title
+                    const title = document.createElement('h3');
+                    title.className = 'project-title';
+
+                    // Add partner label based on 'under' field
+                    let titleText = project.title || 'Untitled Project';
+                    const under = project.under || 'Turfmapp';
+
+                    if (under !== 'Turfmapp') {
+                        titleText += ` - Partnered with ${under}`;
+                    }
+
+                    title.textContent = titleText;
+
+                    // Make title clickable if there's a link
+                    if (hasLink) {
+                        title.style.cursor = 'pointer';
+                        title.style.textDecoration = 'underline';
+                        title.addEventListener('click', () => {
+                            window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
+                        });
+                    }
+
+                    projectItem.appendChild(title);
+
+                    // Add project description right after title
+                    if (project.description) {
+                        const description = document.createElement('p');
+                        description.className = 'project-description';
+                        description.textContent = project.description;
+                        projectItem.appendChild(description);
+                    }
+
+                    // Display YouTube video if available (highest priority)
+                    if (project.youtube_url) {
+                        const mediaContainer = document.createElement('div');
+                        mediaContainer.className = 'project-media';
+
+                        const youtubeId = this.getYouTubeVideoId(project.youtube_url);
+                        if (youtubeId) {
+                            const iframe = document.createElement('iframe');
+                            iframe.src = `https://www.youtube.com/embed/${youtubeId}`;
+                            iframe.setAttribute('frameborder', '0');
+                            iframe.setAttribute('allowfullscreen', '');
+                            iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+                            iframe.style.width = '100%';
+                            iframe.style.height = '200px';
+                            iframe.style.borderRadius = '8px';
+                            mediaContainer.appendChild(iframe);
+
+                            if (hasLink) {
+                                mediaContainer.style.cursor = 'pointer';
+                                mediaContainer.addEventListener('click', (e) => {
+                                    if (e.target === mediaContainer) {
+                                        window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
+                                    }
+                                });
+                            }
+
+                            projectItem.appendChild(mediaContainer);
+                        }
+                    }
+
+                    // Display all media from media array (new format)
+                    if (project.media && Array.isArray(project.media) && project.media.length > 0) {
+                        project.media.forEach(mediaItem => {
+                            const mediaContainer = document.createElement('div');
+                            mediaContainer.className = 'project-media';
+
+                            if (mediaItem.type === 'video') {
+                                const video = document.createElement('video');
+                                video.src = mediaItem.url;
+                                video.muted = true;
+                                video.preload = 'metadata';
+                                mediaContainer.appendChild(video);
+
+                                mediaContainer.addEventListener('click', () => {
+                                    if (hasLink) {
+                                        window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
+                                    } else {
+                                        this.openVideoModal(mediaItem.url);
+                                    }
+                                });
+                            } else {
+                                const img = document.createElement('img');
+                                img.src = mediaItem.url;
+                                img.alt = project.title;
+                                mediaContainer.appendChild(img);
+
+                                mediaContainer.addEventListener('click', () => {
+                                    if (hasLink) {
+                                        window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
+                                    } else {
+                                        this.openImagePage(project);
+                                    }
+                                });
+                            }
+
+                            projectItem.appendChild(mediaContainer);
+                        });
+                    } else if (project.image_url || project.video_url) {
+                        // Fallback: Display single media (old format for backward compatibility)
+                        const mediaContainer = document.createElement('div');
+                        mediaContainer.className = 'project-media';
+
+                        const mediaUrl = project.video_url || project.image_url;
+                        const isVideo = !!project.video_url;
+
+                        if (isVideo) {
+                            const video = document.createElement('video');
+                            video.src = mediaUrl;
+                            video.muted = true;
+                            video.preload = 'metadata';
+                            mediaContainer.appendChild(video);
+
+                            mediaContainer.addEventListener('click', () => {
+                                if (hasLink) {
+                                    window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
+                                } else {
+                                    this.openVideoModal(mediaUrl);
+                                }
+                            });
+                        } else {
+                            const img = document.createElement('img');
+                            img.src = mediaUrl;
+                            img.alt = project.title;
+                            mediaContainer.appendChild(img);
+
+                            mediaContainer.addEventListener('click', () => {
+                                if (hasLink) {
+                                    window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
+                                } else {
+                                    this.openImagePage(project);
+                                }
+                            });
+                        }
+
+                        projectItem.appendChild(mediaContainer);
+                    }
+
+                    // Add project links as text ONLY if there's no media
+                    const hasMedia = project.youtube_url || (project.media && project.media.length > 0) || project.image_url || project.video_url;
+                    if (!hasMedia && project.links && project.links.length > 0) {
+                        const linksContainer = document.createElement('div');
+                        linksContainer.className = 'project-links';
+
+                        project.links.forEach(link => {
+                            const linkEl = document.createElement('a');
+                            linkEl.href = link.url;
+                            linkEl.textContent = link.text;
+                            linkEl.className = 'project-link';
+                            linkEl.target = '_blank';
+                            linkEl.rel = 'noopener noreferrer';
+                            linksContainer.appendChild(linkEl);
+                        });
+
+                        projectItem.appendChild(linksContainer);
+                    }
+
+                    modalContent.appendChild(projectItem);
+                });
+
+                // Show modal
+                backdrop.classList.add('visible');
+                modal.classList.add('visible');
+
+                // Disable camera movement
+                this.disableMovement();
+
+                // Prevent body scroll
+                document.body.style.overflow = 'hidden';
+
+                // Close handlers
+                const closeModal = () => {
+                    backdrop.classList.remove('visible');
+                    modal.classList.remove('visible');
+                    this.enableMovement();
+                    document.body.style.overflow = '';
+                };
+
+                closeBtn.onclick = closeModal;
+                backdrop.onclick = closeModal;
             }
 
             openVideoModal(videoUrl) {
@@ -1550,6 +2078,26 @@ Debug Mode: Press 'D' to show camera position
                 `);
             }
 
+            // Extract YouTube video ID from various URL formats
+            getYouTubeVideoId(url) {
+                if (!url) return null;
+
+                // Support multiple YouTube URL formats
+                const patterns = [
+                    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+                    /^([a-zA-Z0-9_-]{11})$/  // Direct video ID
+                ];
+
+                for (const pattern of patterns) {
+                    const match = url.match(pattern);
+                    if (match && match[1]) {
+                        return match[1];
+                    }
+                }
+
+                return null;
+            }
+
             hideTooltip() {
                 const tooltip = document.getElementById('projectTooltip');
                 const connectionLine = document.getElementById('connectionLine');
@@ -1588,6 +2136,11 @@ Debug Mode: Press 'D' to show camera position
             }
 
             showConnectionLine(hotspot, tooltip) {
+                // Don't show connection lines on mobile
+                if (this.isMobile) {
+                    return;
+                }
+
                 const connectionLine = document.getElementById('connectionLine');
 
                 // Ensure we wait for any ongoing transitions to settle

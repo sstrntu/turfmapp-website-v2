@@ -364,11 +364,17 @@
             border-radius: 8px;
             background: #000;
             min-height: 400px;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .coordinate-picker.dragging {
+            cursor: grabbing;
         }
 
         .background-image {
-            width: 150%;
-            height: 150%;
+            width: 400%;
+            height: 400%;
             object-fit: contain;
             object-position: center center;
             display: block;
@@ -376,6 +382,14 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            transition: transform 0.1s ease-out;
+            pointer-events: none;
+            min-width: 1200px;
+            min-height: 1200px;
+        }
+
+        .coordinate-picker.dragging .background-image {
+            transition: none;
         }
 
         .hotspot-overlay {
@@ -560,9 +574,16 @@
             <!-- Map Section -->
             <div class="map-section">
                 <h2 class="section-title">Hotspot Position</h2>
-                <p style="margin-bottom: 1rem; color: #666; font-size: 14px;">
-                    Click on the map to position your project hotspot
-                </p>
+                <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <p style="color: #666; font-size: 14px; margin: 0; flex: 1; min-width: 200px;">
+                        <strong>🖱️ Drag</strong> to pan the map • <strong>🔍 Zoom</strong> with buttons • <strong>📍 Click</strong> to place hotspot
+                    </p>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button id="zoomOutBtn" class="btn btn-secondary btn-small">🔍➖ Zoom Out</button>
+                        <button id="zoomInBtn" class="btn btn-secondary btn-small">🔍➕ Zoom In</button>
+                        <button id="resetViewBtn" class="btn btn-secondary btn-small">🎯 Reset View</button>
+                    </div>
+                </div>
                 
                 <div class="coordinate-picker" id="coordinatePicker">
                     <img src="/assets/images/TM-world.png" alt="Portfolio Map" class="background-image" id="backgroundImage">
@@ -592,6 +613,22 @@
                 // Tooltip data
                 this.tooltipName = '';
                 this.projects = [];
+                
+                // Pan/drag state
+                this.panState = {
+                    isDragging: false,
+                    startX: 0,
+                    startY: 0,
+                    offsetX: 0,
+                    offsetY: 0,
+                    initialTransformX: -50,
+                    initialTransformY: -50
+                };
+                
+                // Zoom state
+                this.zoomLevel = 1.0; // 1.0 = 400% base size
+                this.minZoom = 0.3;
+                this.maxZoom = 2.0;
                 
                 this.init();
             }
@@ -644,11 +681,13 @@
                 const project = {
                     id: Date.now(), // Temporary ID for new projects
                     title: '',
+                    under: 'Turfmapp', // Default value
                     description: '',
                     links: [],
-                    uploadedMedia: []
+                    uploadedMedia: [],
+                    youtube_url: ''
                 };
-                
+
                 this.projects.push(project);
                 this.renderProjects();
             }
@@ -672,11 +711,21 @@
                         
                         <div class="form-group">
                             <label>Project Title *</label>
-                            <input type="text" value="${this.escapeHtml(project.title || '')}" 
+                            <input type="text" value="${this.escapeHtml(project.title || '')}"
                                    onchange="editor.updateProject(${index}, 'title', this.value)"
                                    placeholder="Enter project title" required>
                         </div>
-                        
+
+                        <div class="form-group">
+                            <label>Under</label>
+                            <select onchange="editor.updateProject(${index}, 'under', this.value)">
+                                <option value="Turfmapp" ${(project.under || 'Turfmapp') === 'Turfmapp' ? 'selected' : ''}>Turfmapp</option>
+                                <option value="Groundwork10" ${project.under === 'Groundwork10' ? 'selected' : ''}>Groundwork10</option>
+                                <option value="ACSS" ${project.under === 'ACSS' ? 'selected' : ''}>ACSS</option>
+                                <option value="Ladderice" ${project.under === 'Ladderice' ? 'selected' : ''}>Ladderice</option>
+                            </select>
+                        </div>
+
                         <div class="form-group">
                             <label>Description</label>
                             <textarea onchange="editor.updateProject(${index}, 'description', this.value)"
@@ -716,10 +765,10 @@
                                 ${(project.uploadedMedia || []).map((media, mediaIndex) => {
                                     const isImage = media.original.mimetype.startsWith('image/');
                                     const url = media.thumbnail?.url || media.original.url;
-                                    
+
                                     return `
                                         <div class="media-item">
-                                            ${isImage ? 
+                                            ${isImage ?
                                                 `<img src="${url}" alt="Media preview">` :
                                                 `<video src="${media.original.url}" muted></video>`
                                             }
@@ -728,6 +777,23 @@
                                     `;
                                 }).join('')}
                             </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>YouTube Video URL</label>
+                            <input type="url" value="${this.escapeHtml(project.youtube_url || '')}"
+                                   onchange="editor.updateProject(${index}, 'youtube_url', this.value)"
+                                   placeholder="https://www.youtube.com/watch?v=...">
+                            <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">
+                                Paste a YouTube video URL to embed it in the tooltip
+                            </small>
+                            ${project.youtube_url ? `
+                                <div class="youtube-preview" style="margin-top: 8px;">
+                                    <img src="${this.getYouTubeThumbnail(project.youtube_url)}"
+                                         alt="YouTube thumbnail"
+                                         style="max-width: 200px; border-radius: 4px;">
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 `).join('');
@@ -822,9 +888,32 @@
                 // Setup project upload areas
                 this.setupProjectUploadAreas();
                 
-                // Coordinate picker
+                // Coordinate picker - click and pan functionality
                 const coordinatePicker = document.getElementById('coordinatePicker');
-                coordinatePicker.addEventListener('click', this.handleMapClick.bind(this));
+                coordinatePicker.addEventListener('mousedown', this.handleMapMouseDown.bind(this));
+                coordinatePicker.addEventListener('mousemove', this.handleMapMouseMove.bind(this));
+                coordinatePicker.addEventListener('mouseup', this.handleMapMouseUp.bind(this));
+                coordinatePicker.addEventListener('mouseleave', this.handleMapMouseUp.bind(this));
+                
+                // Touch support for mobile
+                coordinatePicker.addEventListener('touchstart', this.handleMapTouchStart.bind(this));
+                coordinatePicker.addEventListener('touchmove', this.handleMapTouchMove.bind(this));
+                coordinatePicker.addEventListener('touchend', this.handleMapMouseUp.bind(this));
+                
+                // Map control buttons
+                const resetViewBtn = document.getElementById('resetViewBtn');
+                const zoomInBtn = document.getElementById('zoomInBtn');
+                const zoomOutBtn = document.getElementById('zoomOutBtn');
+                
+                if (resetViewBtn) {
+                    resetViewBtn.addEventListener('click', this.resetMapView.bind(this));
+                }
+                if (zoomInBtn) {
+                    zoomInBtn.addEventListener('click', this.zoomIn.bind(this));
+                }
+                if (zoomOutBtn) {
+                    zoomOutBtn.addEventListener('click', this.zoomOut.bind(this));
+                }
                 
                 // Background image load
                 const backgroundImage = document.getElementById('backgroundImage');
@@ -840,30 +929,131 @@
                 });
             }
 
+            handleMapMouseDown(e) {
+                e.preventDefault();
+                this.panState.isDragging = true;
+                this.panState.startX = e.clientX;
+                this.panState.startY = e.clientY;
+                
+                const picker = document.getElementById('coordinatePicker');
+                picker.classList.add('dragging');
+            }
+
+            handleMapTouchStart(e) {
+                e.preventDefault();
+                if (e.touches.length === 1) {
+                    this.panState.isDragging = true;
+                    this.panState.startX = e.touches[0].clientX;
+                    this.panState.startY = e.touches[0].clientY;
+                    
+                    const picker = document.getElementById('coordinatePicker');
+                    picker.classList.add('dragging');
+                }
+            }
+
+            handleMapMouseMove(e) {
+                if (!this.panState.isDragging) return;
+                
+                e.preventDefault();
+                const deltaX = e.clientX - this.panState.startX;
+                const deltaY = e.clientY - this.panState.startY;
+                
+                this.updateMapPosition(deltaX, deltaY);
+            }
+
+            handleMapTouchMove(e) {
+                if (!this.panState.isDragging || e.touches.length !== 1) return;
+                
+                e.preventDefault();
+                const deltaX = e.touches[0].clientX - this.panState.startX;
+                const deltaY = e.touches[0].clientY - this.panState.startY;
+                
+                this.updateMapPosition(deltaX, deltaY);
+            }
+
+            updateMapPosition(deltaX, deltaY) {
+                const backgroundImage = document.getElementById('backgroundImage');
+                const newOffsetX = this.panState.offsetX + deltaX;
+                const newOffsetY = this.panState.offsetY + deltaY;
+                
+                // Apply boundaries to allow full map exploration
+                const maxOffset = 600; // Much larger range for full map access
+                const boundedX = Math.max(-maxOffset, Math.min(maxOffset, newOffsetX));
+                const boundedY = Math.max(-maxOffset, Math.min(maxOffset, newOffsetY));
+                
+                const transformX = this.panState.initialTransformX + (boundedX / 400) * 100; // Increased sensitivity
+                const transformY = this.panState.initialTransformY + (boundedY / 400) * 100;
+                
+                backgroundImage.style.transform = `translate(${transformX}%, ${transformY}%) scale(${this.zoomLevel})`;
+            }
+
+            handleMapMouseUp(e) {
+                const picker = document.getElementById('coordinatePicker');
+                picker.classList.remove('dragging');
+                
+                if (this.panState.isDragging) {
+                    // Calculate if this was actually a drag or just a click
+                    const deltaX = e.clientX ? e.clientX - this.panState.startX : 0;
+                    const deltaY = e.clientY ? e.clientY - this.panState.startY : 0;
+                    const dragDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                    
+                    if (dragDistance > 5) {
+                        // This was a real drag - update pan position
+                        this.panState.offsetX += deltaX;
+                        this.panState.offsetY += deltaY;
+                        
+                        // Apply boundaries  
+                        const maxOffset = 600;
+                        this.panState.offsetX = Math.max(-maxOffset, Math.min(maxOffset, this.panState.offsetX));
+                        this.panState.offsetY = Math.max(-maxOffset, Math.min(maxOffset, this.panState.offsetY));
+                        
+                        // Update the transform
+                        this.updateMapTransform();
+                    } else {
+                        // This was just a click - place hotspot
+                        this.handleMapClick(e);
+                    }
+                    
+                    this.panState.isDragging = false;
+                }
+            }
+
             handleMapClick(e) {
                 const picker = e.currentTarget;
                 const rect = picker.getBoundingClientRect();
                 const clickX = e.clientX - rect.left;
                 const clickY = e.clientY - rect.top;
                 
-                // Convert click position to normalized coordinates within the actual image area
-                const { offsetX, offsetY, width, height } = this.imageRect;
+                // Get the background image element to read its actual rendered position
+                const backgroundImage = document.getElementById('backgroundImage');
+                const imageRect = backgroundImage.getBoundingClientRect();
+                const containerRect = picker.getBoundingClientRect();
                 
-                // Check if click is within the image area
-                const imageX = clickX - offsetX;
-                const imageY = clickY - offsetY;
+                // Calculate click position relative to the actual rendered image
+                const relativeClickX = clickX - (imageRect.left - containerRect.left);
+                const relativeClickY = clickY - (imageRect.top - containerRect.top);
                 
-                if (imageX >= 0 && imageX <= width && imageY >= 0 && imageY <= height) {
-                    // Normalize to 0-1 range within the image
-                    const normalizedX = imageX / width;
-                    const normalizedY = imageY / height;
+                // Check if click is within the rendered image bounds
+                if (relativeClickX >= 0 && relativeClickX <= imageRect.width && 
+                    relativeClickY >= 0 && relativeClickY <= imageRect.height) {
                     
-                    // Position the circular hotspot center at the click point
+                    // Normalize to 0-1 range based on the rendered image size
+                    const normalizedX = relativeClickX / imageRect.width;
+                    const normalizedY = relativeClickY / imageRect.height;
+                    
+                    // Ensure coordinates are within valid range
                     this.coordinates.x = Math.max(0, Math.min(1, normalizedX));
                     this.coordinates.y = Math.max(0, Math.min(1, normalizedY));
                     
+                    console.log('Click at:', clickX.toFixed(0), clickY.toFixed(0));
+                    console.log('Relative to image:', relativeClickX.toFixed(0), relativeClickY.toFixed(0));
+                    console.log('Image bounds:', imageRect.width.toFixed(0), 'x', imageRect.height.toFixed(0));
+                    console.log('Normalized coordinates:', this.coordinates.x.toFixed(3), this.coordinates.y.toFixed(3));
+                    
                     this.updateHotspotDisplay();
                     this.updateCoordinateDisplay();
+                } else {
+                    console.log('Click outside image bounds');
                 }
             }
 
@@ -878,8 +1068,8 @@
                 const iw = backgroundImage.naturalWidth || 1;
                 const ih = backgroundImage.naturalHeight || 1;
                 
-                // Calculate displayed size with object-fit: contain at 150% size (matching homepage)
-                const scale = Math.min(cw / iw, ch / ih) * 1.5; // 150% sizing for camera movement space
+                // Calculate displayed size with object-fit: contain at 400% size (for full map access)
+                const scale = Math.min(cw / iw, ch / ih) * 4.0; // 400% sizing for full map exploration
                 const dw = iw * scale;
                 const dh = ih * scale;
                 const offsetX = (cw - dw) / 2;
@@ -898,22 +1088,63 @@
             updateHotspotDisplay() {
                 const hotspot = document.getElementById('currentHotspot');
                 
-                if (this.imageRect.width === 0 || this.imageRect.height === 0) {
+                // Get the background image element to read its actual rendered position
+                const backgroundImage = document.getElementById('backgroundImage');
+                const imageRect = backgroundImage.getBoundingClientRect();
+                const containerRect = document.getElementById('coordinatePicker').getBoundingClientRect();
+                
+                if (imageRect.width === 0 || imageRect.height === 0) {
                     // Image not loaded yet
                     return;
                 }
                 
-                const { x, y, w, h } = this.coordinates;
-                const { width, height, offsetX, offsetY } = this.imageRect;
+                const { x, y } = this.coordinates;
                 
-                // Calculate position within the image area (matching homepage approach)
-                // Position the center of the circular hotspot at the coordinate
-                const left = offsetX + (x * width);
-                const top = offsetY + (y * height);
+                // Calculate hotspot position within the actual rendered image
+                const hotspotImageX = x * imageRect.width;
+                const hotspotImageY = y * imageRect.height;
                 
-                hotspot.style.left = `${left}px`;
-                hotspot.style.top = `${top}px`;
+                // Convert to container-relative coordinates
+                const containerRelativeX = (imageRect.left - containerRect.left) + hotspotImageX;
+                const containerRelativeY = (imageRect.top - containerRect.top) + hotspotImageY;
+                
+                hotspot.style.left = `${containerRelativeX}px`;
+                hotspot.style.top = `${containerRelativeY}px`;
                 hotspot.classList.add('visible');
+                
+                console.log('Hotspot displayed at:', containerRelativeX.toFixed(0), containerRelativeY.toFixed(0));
+            }
+
+            zoomIn() {
+                this.zoomLevel = Math.min(this.maxZoom, this.zoomLevel + 0.2);
+                this.updateMapTransform();
+                this.updateHotspotDisplay();
+            }
+
+            zoomOut() {
+                this.zoomLevel = Math.max(this.minZoom, this.zoomLevel - 0.2);
+                this.updateMapTransform();
+                this.updateHotspotDisplay();
+            }
+
+            resetMapView() {
+                // Reset pan state
+                this.panState.offsetX = 0;
+                this.panState.offsetY = 0;
+                this.zoomLevel = 1.0;
+                
+                // Reset background image position
+                this.updateMapTransform();
+                
+                // Update hotspot display
+                this.updateHotspotDisplay();
+            }
+
+            updateMapTransform() {
+                const backgroundImage = document.getElementById('backgroundImage');
+                const transformX = this.panState.initialTransformX + (this.panState.offsetX / 400) * 100;
+                const transformY = this.panState.initialTransformY + (this.panState.offsetY / 400) * 100;
+                backgroundImage.style.transform = `translate(${transformX}%, ${transformY}%) scale(${this.zoomLevel})`;
             }
 
             updateCoordinateDisplay() {
@@ -1063,41 +1294,59 @@
                     for (let i = 0; i < projectElements.length; i++) {
                         const projectElement = projectElements[i];
                         const titleInput = projectElement.querySelector('input[type="text"]'); // First input is title
+                        const underSelect = projectElement.querySelector('select');
                         const descriptionInput = projectElement.querySelector('textarea');
-                        
+                        const youtubeInput = projectElement.querySelector('input[type="url"]'); // YouTube URL input
+
                         const title = titleInput ? titleInput.value.trim() : '';
+                        const under = underSelect ? underSelect.value : 'Turfmapp';
                         const description = descriptionInput ? descriptionInput.value.trim() : '';
-                        
+                        const youtube_url = youtubeInput ? youtubeInput.value.trim() : '';
+
                         if (!title) {
                             this.showAlert(`Project ${i + 1} title is required`, 'error');
                             return;
                         }
-                        
+
                         // Get links for this project
                         const linkElements = projectElement.querySelectorAll('.link-item');
                         const links = [];
                         linkElements.forEach(linkElement => {
                             const textInput = linkElement.children[0];
                             const urlInput = linkElement.children[1];
-                            if (textInput.value.trim() && urlInput.value.trim()) {
+                            // Only URL is required, text is optional
+                            if (urlInput.value.trim()) {
                                 links.push({
-                                    text: textInput.value.trim(),
+                                    text: textInput.value.trim() || 'View Project',
                                     url: urlInput.value.trim()
                                 });
                             }
                         });
-                        
+
                         // Get media for this project
                         const projectIndex = parseInt(projectElement.dataset.projectIndex);
                         const projectMedia = this.projects[projectIndex] ? this.projects[projectIndex].uploadedMedia || [] : [];
-                        
+
+                        // Store all media URLs in an array
+                        const media = projectMedia.map(m => ({
+                            type: m.original.mimetype.startsWith('image/') ? 'image' : 'video',
+                            url: m.optimized?.url || m.original.url,
+                            thumbnail: m.thumbnail?.url || null
+                        }));
+
+                        // Keep backward compatibility with single image_url and video_url
+                        const firstImage = projectMedia.find(m => m.original.mimetype.startsWith('image/'));
+                        const firstVideo = projectMedia.find(m => m.original.mimetype.startsWith('video/'));
+
                         projects.push({
                             title: title,
+                            under: under,
                             description: description,
                             links: links,
-                            image_url: projectMedia.find(m => m.original.mimetype.startsWith('image/'))?.optimized?.url || 
-                                     projectMedia.find(m => m.original.mimetype.startsWith('image/'))?.original.url || '',
-                            video_url: projectMedia.find(m => m.original.mimetype.startsWith('video/'))?.original.url || ''
+                            image_url: firstImage?.optimized?.url || firstImage?.original.url || '',
+                            video_url: firstVideo?.original.url || '',
+                            media: media,  // Store all media
+                            youtube_url: youtube_url
                         });
                     }
 
@@ -1254,15 +1503,31 @@
                         this.projects = item.projects.map((project, index) => ({
                             id: index + 1,
                             title: project.title || '',
+                            under: project.under || 'Turfmapp',
                             description: project.description || '',
                             links: project.links || [],
-                            uploadedMedia: []
+                            uploadedMedia: [],
+                            youtube_url: project.youtube_url || ''
                         }));
                         
                         // Add existing media to projects if available
                         item.projects.forEach((project, index) => {
-                            if (project.image_url || project.video_url) {
-                                this.projects[index].uploadedMedia = [];
+                            this.projects[index].uploadedMedia = [];
+
+                            // Load from new media array format (supports multiple media)
+                            if (project.media && Array.isArray(project.media) && project.media.length > 0) {
+                                project.media.forEach(m => {
+                                    this.projects[index].uploadedMedia.push({
+                                        original: {
+                                            url: m.url,
+                                            mimetype: m.type === 'image' ? 'image/jpeg' : 'video/mp4'
+                                        },
+                                        optimized: m.url ? { url: m.url } : null,
+                                        thumbnail: m.thumbnail ? { url: m.thumbnail } : null
+                                    });
+                                });
+                            } else {
+                                // Fallback: Load from old single image_url/video_url format
                                 if (project.image_url) {
                                     this.projects[index].uploadedMedia.push({
                                         original: { url: project.image_url, mimetype: 'image/jpeg' }
@@ -1285,9 +1550,11 @@
                         this.projects = [{
                             id: 1,
                             title: item.title,
+                            under: 'Turfmapp',
                             description: item.description,
                             links: item.links || [],
-                            uploadedMedia: []
+                            uploadedMedia: [],
+                            youtube_url: ''
                         }];
                         
                         // If legacy project has media, add it to the first project
@@ -1348,6 +1615,33 @@
                     console.error('Failed to load tooltip:', error);
                     this.showAlert('Failed to load tooltip data', 'error');
                 }
+            }
+
+            // Extract YouTube video ID from various URL formats
+            getYouTubeVideoId(url) {
+                if (!url) return null;
+
+                // Support multiple YouTube URL formats
+                const patterns = [
+                    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+                    /^([a-zA-Z0-9_-]{11})$/  // Direct video ID
+                ];
+
+                for (const pattern of patterns) {
+                    const match = url.match(pattern);
+                    if (match && match[1]) {
+                        return match[1];
+                    }
+                }
+
+                return null;
+            }
+
+            // Get YouTube thumbnail URL from video URL
+            getYouTubeThumbnail(url) {
+                const videoId = this.getYouTubeVideoId(url);
+                if (!videoId) return '';
+                return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
             }
 
             escapeHtml(text) {
