@@ -138,14 +138,20 @@ const projectsDB = {
                     const projects = rows.map(project => {
                         const parsedLinks = project.links ? JSON.parse(project.links) : [];
                         const coordinates = project.coordinates ? JSON.parse(project.coordinates) : {};
-                        
+
                         // Check if this is a tooltip format (projects array stored in links field)
                         if (Array.isArray(parsedLinks) && parsedLinks.length > 0 && parsedLinks[0].title) {
                             // This is a tooltip format
+                            // Add default 'under' field for backward compatibility
+                            const projectsWithDefaults = parsedLinks.map(p => ({
+                                ...p,
+                                under: p.under || 'Turfmapp'
+                            }));
+
                             return {
                                 id: project.id,
                                 name: project.title, // Tooltip name stored in title field
-                                projects: parsedLinks, // Projects array stored in links field
+                                projects: projectsWithDefaults, // Projects array stored in links field
                                 coordinates: coordinates,
                                 created_at: project.created_at,
                                 updated_at: project.updated_at
@@ -175,14 +181,20 @@ const projectsDB = {
                 else if (row) {
                     const parsedLinks = row.links ? JSON.parse(row.links) : [];
                     const coordinates = row.coordinates ? JSON.parse(row.coordinates) : {};
-                    
+
                     // Check if this is a tooltip format (projects array stored in links field)
                     if (Array.isArray(parsedLinks) && parsedLinks.length > 0 && parsedLinks[0].title) {
                         // This is a tooltip format
+                        // Add default 'under' field for backward compatibility
+                        const projectsWithDefaults = parsedLinks.map(p => ({
+                            ...p,
+                            under: p.under || 'Turfmapp'
+                        }));
+
                         const project = {
                             id: row.id,
                             name: row.title, // Tooltip name stored in title field
-                            projects: parsedLinks, // Projects array stored in links field
+                            projects: projectsWithDefaults, // Projects array stored in links field
                             coordinates: coordinates,
                             created_at: row.created_at,
                             updated_at: row.updated_at
