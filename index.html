@@ -75,7 +75,6 @@ Debug Mode: Press 'D' to show camera position
             max-width: none;
             max-height: none;
             pointer-events: none;
-        }
             user-select: none;
             -webkit-user-drag: none;
         }
@@ -87,7 +86,8 @@ Debug Mode: Press 'D' to show camera position
             left: 50%;
             width: 100%;
             height: 100%;
-            transform: translate(-50%, -50%) scale(2); /* Match image scale */
+            transform: translate(-50%, -50%) scale(2);
+            /* Match image scale */
             transform-origin: center center;
             pointer-events: none;
             z-index: 3;
@@ -244,7 +244,7 @@ Debug Mode: Press 'D' to show camera position
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 
+            box-shadow:
                 0 4px 12px rgba(0, 123, 255, 0.3),
                 0 2px 6px rgba(0, 0, 0, 0.2);
             animation: pulse 2s infinite;
@@ -254,7 +254,7 @@ Debug Mode: Press 'D' to show camera position
             transform: scale(1.3);
             background: rgba(0, 123, 255, 1);
             border-color: rgba(255, 255, 255, 1);
-            box-shadow: 
+            box-shadow:
                 0 6px 20px rgba(0, 123, 255, 0.5),
                 0 4px 12px rgba(0, 0, 0, 0.3);
             animation: none;
@@ -274,14 +274,17 @@ Debug Mode: Press 'D' to show camera position
         }
 
         @keyframes pulse {
-            0%, 100% { 
-                box-shadow: 
+
+            0%,
+            100% {
+                box-shadow:
                     0 4px 12px rgba(0, 123, 255, 0.3),
                     0 2px 6px rgba(0, 0, 0, 0.2),
                     0 0 0 0 rgba(0, 123, 255, 0.4);
             }
-            50% { 
-                box-shadow: 
+
+            50% {
+                box-shadow:
                     0 4px 12px rgba(0, 123, 255, 0.3),
                     0 2px 6px rgba(0, 0, 0, 0.2),
                     0 0 0 8px rgba(0, 123, 255, 0.1);
@@ -515,10 +518,10 @@ Debug Mode: Press 'D' to show camera position
         .connection-line {
             position: fixed;
             height: 2px;
-            background: linear-gradient(90deg, 
-                rgba(0, 123, 255, 0.8) 0%, 
-                rgba(0, 123, 255, 0.6) 50%, 
-                rgba(0, 123, 255, 0.4) 100%);
+            background: linear-gradient(90deg,
+                    rgba(0, 123, 255, 0.8) 0%,
+                    rgba(0, 123, 255, 0.6) 50%,
+                    rgba(0, 123, 255, 0.4) 100%);
             transform-origin: 0 center;
             opacity: 0;
             visibility: hidden;
@@ -637,6 +640,7 @@ Debug Mode: Press 'D' to show camera position
 
         /* Mobile Tooltip Modal */
         @media (max-width: 1024px) {
+
             /* Hide desktop tooltip and connection line on mobile */
             .tooltip.visible {
                 display: none;
@@ -768,6 +772,13 @@ Debug Mode: Press 'D' to show camera position
             color: #00ff00;
         }
 
+        /* Hide zoom debug on mobile */
+        @media (max-width: 1024px) {
+            .zoom-debug {
+                display: none !important;
+            }
+        }
+
         /* Loading overlay */
         .loading-overlay {
             position: fixed;
@@ -894,7 +905,7 @@ Debug Mode: Press 'D' to show camera position
     <script>
         // Project data will be loaded dynamically from API
         let projectsData = [];
-        
+
         /*
         Example data structure for multiple projects per region:
         
@@ -995,7 +1006,7 @@ Debug Mode: Press 'D' to show camera position
                 this.imageRect = { width: 0, height: 0 };
                 this.debugMode = false;
                 this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-                
+
                 // Edge movement state
                 this.edgeMovement = {
                     active: false,
@@ -1021,7 +1032,7 @@ Debug Mode: Press 'D' to show camera position
                             if (this.scene.clientWidth > 0 && this.worldImage.naturalWidth > 0) {
                                 this.calculateCameraBounds();
                                 this.updateHotspots();
-                                
+
                                 // Start camera at center with 12.5% zoom
                                 this.camera.x = this.camera.targetX = 0;
                                 this.camera.y = this.camera.targetY = 0;
@@ -1140,7 +1151,7 @@ Debug Mode: Press 'D' to show camera position
             // Unified Drag Handler
             handleDragStart(e) {
                 if (e.button !== 0) return; // Only left click
-                
+
                 // Check if tooltip is visible - if so, don't allow dragging
                 const tooltip = document.getElementById('projectTooltip');
                 if (tooltip && tooltip.classList.contains('visible')) {
@@ -1277,7 +1288,7 @@ Debug Mode: Press 'D' to show camera position
             toggleDebugMode() {
                 this.debugMode = !this.debugMode;
                 document.body.classList.toggle('debug-mode', this.debugMode);
-                
+
                 if (this.debugMode) {
                     this.setupDebugEdgeZones();
                 }
@@ -1331,7 +1342,7 @@ Debug Mode: Press 'D' to show camera position
                 // Check if tooltip is visible - if so, disable all movement
                 const tooltip = document.getElementById('projectTooltip');
                 const tooltipVisible = tooltip && tooltip.classList.contains('visible');
-                
+
                 // Update edge movement if active, not dragging, and tooltip not visible
                 if (this.edgeMovement.active && !this.dragState.isActive && !tooltipVisible) {
                     this.updateEdgeMovement();
@@ -1411,7 +1422,7 @@ Debug Mode: Press 'D' to show camera position
             detectMobile() {
                 // Detect mobile/tablet devices (up to 1024px width)
                 return window.innerWidth <= 1024 ||
-                       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             }
 
             updateZoomDebug() {
@@ -1432,7 +1443,7 @@ Debug Mode: Press 'D' to show camera position
                 // Calculate how much we can move the camera at current zoom level
                 const scaledImageWidth = iw * this.currentZoom;
                 const scaledImageHeight = ih * this.currentZoom;
-                
+
                 // Maximum camera movement is half the difference between scaled image and viewport
                 this.motionConfig.maxCameraX = Math.max(0, (scaledImageWidth - cw) / 2);
                 this.motionConfig.maxCameraY = Math.max(0, (scaledImageHeight - ch) / 2);
@@ -1452,7 +1463,7 @@ Debug Mode: Press 'D' to show camera position
 
             updateImageRect() {
                 this.calculateCameraBounds();
-                
+
                 // Clamp current camera to new boundaries
                 this.camera.targetX = Math.max(-this.motionConfig.maxCameraX, Math.min(this.motionConfig.maxCameraX, this.camera.targetX));
                 this.camera.targetY = Math.max(-this.motionConfig.maxCameraY, Math.min(this.motionConfig.maxCameraY, this.camera.targetY));
@@ -1587,13 +1598,13 @@ Debug Mode: Press 'D' to show camera position
 
                 // Clear and populate projects
                 content.innerHTML = '';
-                
+
                 // Ensure projects array exists
                 if (!tooltipData.projects || !Array.isArray(tooltipData.projects)) {
                     console.warn('Invalid tooltip data: projects array missing or invalid', tooltipData);
                     tooltipData.projects = [];
                 }
-                
+
                 tooltipData.projects.forEach(project => {
                     const projectItem = document.createElement('div');
                     projectItem.className = 'project-item';
@@ -1995,14 +2006,14 @@ Debug Mode: Press 'D' to show camera position
                 const modal = document.getElementById('videoModal');
                 const video = document.getElementById('modalVideo');
                 const source = document.getElementById('modalVideoSource');
-                
+
                 source.src = videoUrl;
                 video.load(); // Reload the video element
                 modal.classList.add('visible');
-                
+
                 // Auto-play the video
                 video.play().catch(e => console.log('Auto-play prevented:', e));
-                
+
                 // Disable background movement
                 this.disableMovement();
             }
@@ -2010,11 +2021,11 @@ Debug Mode: Press 'D' to show camera position
             closeVideoModal() {
                 const modal = document.getElementById('videoModal');
                 const video = document.getElementById('modalVideo');
-                
+
                 modal.classList.remove('visible');
                 video.pause();
                 video.currentTime = 0;
-                
+
                 // Re-enable movement
                 this.enableMovement();
             }
@@ -2283,13 +2294,13 @@ Debug Mode: Press 'D' to show camera position
                 const { edgeZone } = this.motionConfig;
                 const vw = window.innerWidth;
                 const vh = window.innerHeight;
-                
+
                 let edgeStatus = 'none';
                 if (mouseX < edgeZone) edgeStatus += ' LEFT';
                 if (mouseX > vw - edgeZone) edgeStatus += ' RIGHT';
                 if (mouseY < edgeZone) edgeStatus += ' TOP';
                 if (mouseY > vh - edgeZone) edgeStatus += ' BOTTOM';
-                
+
                 edge.textContent = edgeStatus === 'none' ? 'none' : edgeStatus.trim();
             }
         }
