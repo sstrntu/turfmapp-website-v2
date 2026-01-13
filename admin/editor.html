@@ -682,6 +682,8 @@
                     id: Date.now(), // Temporary ID for new projects
                     title: '',
                     under: 'Turfmapp', // Default value
+                    service: '',
+                    date: '',
                     description: '',
                     links: [],
                     uploadedMedia: [],
@@ -724,6 +726,20 @@
                                 <option value="ACSS" ${project.under === 'ACSS' ? 'selected' : ''}>ACSS</option>
                                 <option value="Ladderice" ${project.under === 'Ladderice' ? 'selected' : ''}>Ladderice</option>
                             </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Service</label>
+                            <input type="text" value="${this.escapeHtml(project.service || '')}"
+                                   onchange="editor.updateProject(${index}, 'service', this.value)"
+                                   placeholder="e.g., Strategy, Design, Development">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="text" value="${this.escapeHtml(project.date || '')}"
+                                   onchange="editor.updateProject(${index}, 'date', this.value)"
+                                   placeholder="e.g., 2024, Q4 2023, January 2024">
                         </div>
 
                         <div class="form-group">
@@ -1293,13 +1309,18 @@
                     
                     for (let i = 0; i < projectElements.length; i++) {
                         const projectElement = projectElements[i];
-                        const titleInput = projectElement.querySelector('input[type="text"]'); // First input is title
+                        const inputs = projectElement.querySelectorAll('input[type="text"]');
+                        const titleInput = inputs[0]; // First text input is title
+                        const serviceInput = inputs[1]; // Second text input is service
+                        const dateInput = inputs[2]; // Third text input is date
                         const underSelect = projectElement.querySelector('select');
                         const descriptionInput = projectElement.querySelector('textarea');
                         const youtubeInput = projectElement.querySelector('input[type="url"]'); // YouTube URL input
 
                         const title = titleInput ? titleInput.value.trim() : '';
                         const under = underSelect ? underSelect.value : 'Turfmapp';
+                        const service = serviceInput ? serviceInput.value.trim() : '';
+                        const date = dateInput ? dateInput.value.trim() : '';
                         const description = descriptionInput ? descriptionInput.value.trim() : '';
                         const youtube_url = youtubeInput ? youtubeInput.value.trim() : '';
 
@@ -1341,6 +1362,8 @@
                         projects.push({
                             title: title,
                             under: under,
+                            service: service,
+                            date: date,
                             description: description,
                             links: links,
                             image_url: firstImage?.optimized?.url || firstImage?.original.url || '',
@@ -1504,6 +1527,8 @@
                             id: index + 1,
                             title: project.title || '',
                             under: project.under || 'Turfmapp',
+                            service: project.service || '',
+                            date: project.date || '',
                             description: project.description || '',
                             links: project.links || [],
                             uploadedMedia: [],

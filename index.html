@@ -766,16 +766,509 @@ Debug Mode: Press 'D' to show camera position
             z-index: 10000;
             border: 1px solid rgba(255, 255, 255, 0.2);
             pointer-events: none;
+            display: none; /* Hidden */
         }
 
         .zoom-debug strong {
             color: #00ff00;
         }
 
-        /* Hide zoom debug on mobile */
+        /* Import Modern Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+        /* Project Detail Modal - Tooltip Style */
+        .project-detail-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 5000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .project-detail-backdrop.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .project-detail-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 5001;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            background: #1A1818;
+        }
+
+        .project-detail-modal.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .project-detail-close {
+            position: fixed;
+            top: 32px;
+            right: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 5002;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 300;
+        }
+
+        .project-detail-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .project-nav-btn {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 5002;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .project-nav-prev {
+            left: 32px;
+        }
+
+        .project-nav-next {
+            right: 32px;
+        }
+
+        .project-nav-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .project-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .project-detail-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 80px 80px;
+            color: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        /* Header Section - Title and Metadata */
+        .project-detail-header {
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        .project-detail-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(48px, 8vw, 80px);
+            font-weight: 700;
+            margin: 0 0 40px 0;
+            line-height: 1.1;
+            color: white;
+            letter-spacing: -0.02em;
+        }
+
+        .project-detail-meta {
+            display: flex;
+            gap: 60px;
+            padding: 0;
+            border: none;
+            margin-bottom: 0;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            padding: 0;
+        }
+
+        .meta-item::before {
+            display: none;
+        }
+
+        .meta-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .meta-value {
+            font-size: 16px;
+            color: white;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Hero Media Section */
+        .project-detail-hero {
+            width: 100%;
+            margin: 60px 0;
+            position: relative;
+        }
+
+        .hero-media {
+            width: 100%;
+            min-height: 500px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .hero-media img,
+        .hero-media video,
+        .hero-media iframe {
+            width: 100%;
+            height: 100%;
+            min-height: 500px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Description Section */
+        .project-detail-description-section {
+            margin: 60px 0;
+        }
+
+        .description-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            color: white;
+        }
+
+        .project-detail-description {
+            font-size: 16px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.85);
+            margin: 0;
+            max-width: none;
+            font-weight: 400;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Gallery Section - Grid Layout */
+        .project-detail-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+            margin-top: 60px;
+        }
+
+        .gallery-item {
+            position: relative;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-4px);
+            opacity: 0.9;
+        }
+
+        .gallery-item img,
+        .gallery-item video,
+        .gallery-item iframe {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Lightbox - Clean Style */
+        .lightbox-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 6000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .lightbox-backdrop.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 6001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .lightbox.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .lightbox-close {
+            position: fixed;
+            top: 32px;
+            right: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 6002;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .lightbox-nav {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 6002;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox-nav-prev {
+            left: 32px;
+        }
+
+        .lightbox-nav-next {
+            right: 32px;
+        }
+
+        .lightbox-nav:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .lightbox-nav:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .lightbox-content {
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox-content img,
+        .lightbox-content video {
+            max-width: 100%;
+            max-height: 85vh;
+            object-fit: contain;
+        }
+
+        /* Mobile Responsiveness for Project Detail */
         @media (max-width: 1024px) {
-            .zoom-debug {
-                display: none !important;
+            .project-detail-content {
+                padding: 80px 40px 60px;
+            }
+
+            .project-detail-title {
+                font-size: clamp(40px, 10vw, 64px);
+                margin-bottom: 32px;
+            }
+
+            .project-detail-meta {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .hero-media {
+                min-height: 350px;
+            }
+
+            .hero-media img,
+            .hero-media video,
+            .hero-media iframe {
+                min-height: 350px;
+            }
+
+            .description-title {
+                font-size: 20px;
+            }
+
+            .project-detail-description {
+                font-size: 15px;
+            }
+
+            .project-detail-gallery {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                margin-top: 48px;
+            }
+
+            .project-nav-btn,
+            .project-detail-close {
+                width: 44px;
+                height: 44px;
+                font-size: 20px;
+            }
+
+            .project-nav-prev {
+                left: 20px;
+            }
+
+            .project-nav-next {
+                right: 20px;
+            }
+
+            .project-detail-close {
+                top: 20px;
+                right: 20px;
+            }
+
+            .lightbox {
+                padding: 80px 20px 20px;
+            }
+
+            .lightbox-nav {
+                width: 48px;
+                height: 48px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .project-detail-content {
+                padding: 60px 24px 40px;
+            }
+
+            .project-detail-title {
+                font-size: clamp(32px, 12vw, 48px);
+                margin-bottom: 24px;
+            }
+
+            .project-detail-meta {
+                gap: 16px;
+            }
+
+            .meta-value {
+                font-size: 14px;
+            }
+
+            .hero-media {
+                min-height: 250px;
+                border-radius: 8px;
+            }
+
+            .hero-media img,
+            .hero-media video,
+            .hero-media iframe {
+                min-height: 250px;
+            }
+
+            .description-title {
+                font-size: 18px;
+            }
+
+            .project-detail-description {
+                font-size: 14px;
+            }
+
+            .project-detail-gallery {
+                margin-top: 32px;
+            }
+
+            .gallery-item {
+                border-radius: 8px;
+            }
+
+            .project-nav-btn {
+                width: 40px;
+                height: 40px;
+            }
+
+            .project-nav-prev {
+                left: 16px;
+            }
+
+            .project-nav-next {
+                right: 16px;
+            }
+
+            .project-detail-close {
+                top: 16px;
+                right: 16px;
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
             }
         }
 
@@ -897,6 +1390,74 @@ Debug Mode: Press 'D' to show camera position
                 Your browser does not support the video tag.
             </video>
         </div>
+    </div>
+
+    <!-- Project Detail Modal -->
+    <div id="projectDetailBackdrop" class="project-detail-backdrop"></div>
+    <div id="projectDetailModal" class="project-detail-modal">
+        <button id="projectDetailClose" class="project-detail-close" aria-label="Close">&times;</button>
+
+        <!-- Navigation Buttons -->
+        <button id="projectPrevBtn" class="project-nav-btn project-nav-prev" aria-label="Previous Project">
+            <svg viewBox="0 0 24 24" width="24" height="24">
+                <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+            </svg>
+        </button>
+        <button id="projectNextBtn" class="project-nav-btn project-nav-next" aria-label="Next Project">
+            <svg viewBox="0 0 24 24" width="24" height="24">
+                <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+            </svg>
+        </button>
+
+        <div class="project-detail-content">
+            <!-- Project Header -->
+            <div class="project-detail-header">
+                <h1 id="projectDetailTitle" class="project-detail-title"></h1>
+                <div class="project-detail-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Client</span>
+                        <span id="projectDetailClient" class="meta-value"></span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Service</span>
+                        <span id="projectDetailService" class="meta-value"></span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Date</span>
+                        <span id="projectDetailDate" class="meta-value"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero Media -->
+            <div id="projectDetailHero" class="project-detail-hero"></div>
+
+            <!-- Description Section -->
+            <div id="projectDetailDescriptionSection" class="project-detail-description-section">
+                <h2 class="description-title">Description</h2>
+                <p id="projectDetailDescription" class="project-detail-description"></p>
+            </div>
+
+            <!-- Media Gallery -->
+            <div id="projectDetailGallery" class="project-detail-gallery"></div>
+        </div>
+    </div>
+
+    <!-- Lightbox for Full-Screen Media -->
+    <div id="lightboxBackdrop" class="lightbox-backdrop"></div>
+    <div id="lightbox" class="lightbox">
+        <button id="lightboxClose" class="lightbox-close" aria-label="Close">&times;</button>
+        <button id="lightboxPrev" class="lightbox-nav lightbox-nav-prev" aria-label="Previous">
+            <svg viewBox="0 0 24 24" width="32" height="32">
+                <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+            </svg>
+        </button>
+        <button id="lightboxNext" class="lightbox-nav lightbox-nav-next" aria-label="Next">
+            <svg viewBox="0 0 24 24" width="32" height="32">
+                <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+            </svg>
+        </button>
+        <div id="lightboxContent" class="lightbox-content"></div>
     </div>
 
     <!-- Connection Line -->
@@ -1605,7 +2166,7 @@ Debug Mode: Press 'D' to show camera position
                     tooltipData.projects = [];
                 }
 
-                tooltipData.projects.forEach(project => {
+                tooltipData.projects.forEach((project, projectIndex) => {
                     const projectItem = document.createElement('div');
                     projectItem.className = 'project-item';
 
@@ -1625,14 +2186,15 @@ Debug Mode: Press 'D' to show camera position
 
                     title.textContent = titleText;
 
-                    // Make title clickable if there's a link
-                    if (hasLink) {
-                        title.style.cursor = 'pointer';
-                        title.style.textDecoration = 'underline';
-                        title.addEventListener('click', () => {
-                            window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
-                        });
-                    }
+                    // Make title clickable - opens project detail modal
+                    title.style.cursor = 'pointer';
+                    title.style.textDecoration = 'underline';
+                    title.addEventListener('click', () => {
+                        // Close tooltip first
+                        this.hideTooltip();
+                        // Open project detail modal
+                        this.openProjectDetail(project, tooltipData.projects, projectIndex);
+                    });
 
                     projectItem.appendChild(title);
 
@@ -1688,11 +2250,9 @@ Debug Mode: Press 'D' to show camera position
                                 mediaContainer.appendChild(video);
 
                                 mediaContainer.addEventListener('click', () => {
-                                    if (hasLink) {
-                                        window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
-                                    } else {
-                                        this.openVideoModal(mediaItem.url);
-                                    }
+                                    // Close tooltip/modal and open project detail modal
+                                    this.hideTooltip();
+                                    this.openProjectDetail(project, tooltipData.projects, projectIndex);
                                 });
                             } else {
                                 const img = document.createElement('img');
@@ -1701,11 +2261,9 @@ Debug Mode: Press 'D' to show camera position
                                 mediaContainer.appendChild(img);
 
                                 mediaContainer.addEventListener('click', () => {
-                                    if (hasLink) {
-                                        window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
-                                    } else {
-                                        this.openImagePage(project);
-                                    }
+                                    // Close tooltip/modal and open project detail modal
+                                    this.hideTooltip();
+                                    this.openProjectDetail(project, tooltipData.projects, projectIndex);
                                 });
                             }
 
@@ -1727,11 +2285,9 @@ Debug Mode: Press 'D' to show camera position
                             mediaContainer.appendChild(video);
 
                             mediaContainer.addEventListener('click', () => {
-                                if (hasLink) {
-                                    window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
-                                } else {
-                                    this.openVideoModal(mediaUrl);
-                                }
+                                // Close tooltip/modal and open project detail modal
+                                this.hideTooltip();
+                                this.openProjectDetail(project, tooltipData.projects, projectIndex);
                             });
                         } else {
                             const img = document.createElement('img');
@@ -1740,11 +2296,9 @@ Debug Mode: Press 'D' to show camera position
                             mediaContainer.appendChild(img);
 
                             mediaContainer.addEventListener('click', () => {
-                                if (hasLink) {
-                                    window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
-                                } else {
-                                    this.openImagePage(project);
-                                }
+                                // Close tooltip/modal and open project detail modal
+                                this.hideTooltip();
+                                this.openProjectDetail(project, tooltipData.projects, projectIndex);
                             });
                         }
 
@@ -1811,8 +2365,16 @@ Debug Mode: Press 'D' to show camera position
                     tooltipData.projects = [];
                 }
 
+                // Close modal helper
+                const closeMobileModal = () => {
+                    backdrop.classList.remove('visible');
+                    modal.classList.remove('visible');
+                    this.enableMovement();
+                    document.body.style.overflow = '';
+                };
+
                 // Render projects (same logic as desktop tooltip)
-                tooltipData.projects.forEach(project => {
+                tooltipData.projects.forEach((project, projectIndex) => {
                     const projectItem = document.createElement('div');
                     projectItem.className = 'project-item';
 
@@ -1832,14 +2394,15 @@ Debug Mode: Press 'D' to show camera position
 
                     title.textContent = titleText;
 
-                    // Make title clickable if there's a link
-                    if (hasLink) {
-                        title.style.cursor = 'pointer';
-                        title.style.textDecoration = 'underline';
-                        title.addEventListener('click', () => {
-                            window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
-                        });
-                    }
+                    // Make title clickable - opens project detail modal
+                    title.style.cursor = 'pointer';
+                    title.style.textDecoration = 'underline';
+                    title.addEventListener('click', () => {
+                        // Close mobile modal first
+                        closeMobileModal();
+                        // Open project detail modal
+                        this.openProjectDetail(project, tooltipData.projects, projectIndex);
+                    });
 
                     projectItem.appendChild(title);
 
@@ -1895,11 +2458,9 @@ Debug Mode: Press 'D' to show camera position
                                 mediaContainer.appendChild(video);
 
                                 mediaContainer.addEventListener('click', () => {
-                                    if (hasLink) {
-                                        window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
-                                    } else {
-                                        this.openVideoModal(mediaItem.url);
-                                    }
+                                    // Close mobile modal and open project detail modal
+                                    closeMobileModal();
+                                    this.openProjectDetail(project, tooltipData.projects, projectIndex);
                                 });
                             } else {
                                 const img = document.createElement('img');
@@ -1908,11 +2469,9 @@ Debug Mode: Press 'D' to show camera position
                                 mediaContainer.appendChild(img);
 
                                 mediaContainer.addEventListener('click', () => {
-                                    if (hasLink) {
-                                        window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
-                                    } else {
-                                        this.openImagePage(project);
-                                    }
+                                    // Close mobile modal and open project detail modal
+                                    closeMobileModal();
+                                    this.openProjectDetail(project, tooltipData.projects, projectIndex);
                                 });
                             }
 
@@ -1934,11 +2493,9 @@ Debug Mode: Press 'D' to show camera position
                             mediaContainer.appendChild(video);
 
                             mediaContainer.addEventListener('click', () => {
-                                if (hasLink) {
-                                    window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
-                                } else {
-                                    this.openVideoModal(mediaUrl);
-                                }
+                                // Close mobile modal and open project detail modal
+                                closeMobileModal();
+                                this.openProjectDetail(project, tooltipData.projects, projectIndex);
                             });
                         } else {
                             const img = document.createElement('img');
@@ -1947,11 +2504,9 @@ Debug Mode: Press 'D' to show camera position
                             mediaContainer.appendChild(img);
 
                             mediaContainer.addEventListener('click', () => {
-                                if (hasLink) {
-                                    window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
-                                } else {
-                                    this.openImagePage(project);
-                                }
+                                // Close mobile modal and open project detail modal
+                                closeMobileModal();
+                                this.openProjectDetail(project, tooltipData.projects, projectIndex);
                             });
                         }
 
@@ -1991,15 +2546,8 @@ Debug Mode: Press 'D' to show camera position
                 document.body.style.overflow = 'hidden';
 
                 // Close handlers
-                const closeModal = () => {
-                    backdrop.classList.remove('visible');
-                    modal.classList.remove('visible');
-                    this.enableMovement();
-                    document.body.style.overflow = '';
-                };
-
-                closeBtn.onclick = closeModal;
-                backdrop.onclick = closeModal;
+                closeBtn.onclick = closeMobileModal;
+                backdrop.onclick = closeMobileModal;
             }
 
             openVideoModal(videoUrl) {
@@ -2302,6 +2850,428 @@ Debug Mode: Press 'D' to show camera position
                 if (mouseY > vh - edgeZone) edgeStatus += ' BOTTOM';
 
                 edge.textContent = edgeStatus === 'none' ? 'none' : edgeStatus.trim();
+            }
+
+            // Project Detail Modal Methods
+            openProjectDetail(project, allProjects, projectIndex) {
+                // Store state for navigation
+                this.currentProjectDetail = {
+                    project: project,
+                    allProjects: allProjects,
+                    projectIndex: projectIndex
+                };
+
+                // Get modal elements
+                const backdrop = document.getElementById('projectDetailBackdrop');
+                const modal = document.getElementById('projectDetailModal');
+
+                // Populate modal content
+                this.populateProjectDetail(project);
+
+                // Show/hide navigation buttons based on position
+                const prevBtn = document.getElementById('projectPrevBtn');
+                const nextBtn = document.getElementById('projectNextBtn');
+
+                prevBtn.style.display = projectIndex > 0 ? 'flex' : 'none';
+                nextBtn.style.display = projectIndex < allProjects.length - 1 ? 'flex' : 'none';
+
+                // Show modal
+                backdrop.classList.add('visible');
+                modal.classList.add('visible');
+
+                // Disable camera movement
+                this.disableMovement();
+
+                // Prevent body scroll
+                document.body.style.overflow = 'hidden';
+
+                // Set up event listeners (only once)
+                if (!this.projectDetailListenersAdded) {
+                    this.setupProjectDetailListeners();
+                    this.projectDetailListenersAdded = true;
+                }
+            }
+
+            populateProjectDetail(project) {
+                // Set title
+                document.getElementById('projectDetailTitle').textContent = project.title || 'Untitled Project';
+
+                // Set meta info
+                document.getElementById('projectDetailClient').textContent = project.under || 'Turfmapp';
+                document.getElementById('projectDetailService').textContent = project.service || '-';
+                document.getElementById('projectDetailDate').textContent = project.date || '-';
+
+                // Collect all media items
+                const mediaItems = [];
+
+                // Add YouTube video if available
+                if (project.youtube_url) {
+                    const youtubeId = this.getYouTubeVideoId(project.youtube_url);
+                    if (youtubeId) {
+                        mediaItems.push({
+                            type: 'youtube',
+                            id: youtubeId,
+                            url: project.youtube_url
+                        });
+                    }
+                }
+
+                // Add media from media array
+                if (project.media && Array.isArray(project.media)) {
+                    project.media.forEach(item => {
+                        mediaItems.push({
+                            type: item.type,
+                            url: item.url,
+                            thumbnail: item.thumbnail
+                        });
+                    });
+                }
+
+                // Fallback: single image or video
+                if (mediaItems.length === 0) {
+                    if (project.video_url) {
+                        mediaItems.push({
+                            type: 'video',
+                            url: project.video_url
+                        });
+                    } else if (project.image_url) {
+                        mediaItems.push({
+                            type: 'image',
+                            url: project.image_url
+                        });
+                    }
+                }
+
+                // Populate Hero Section (first media item)
+                const heroSection = document.getElementById('projectDetailHero');
+                heroSection.innerHTML = '';
+
+                if (mediaItems.length > 0) {
+                    const heroMedia = document.createElement('div');
+                    heroMedia.className = 'hero-media';
+
+                    const firstItem = mediaItems[0];
+
+                    if (firstItem.type === 'youtube') {
+                        const iframe = document.createElement('iframe');
+                        iframe.src = `https://www.youtube.com/embed/${firstItem.id}`;
+                        iframe.setAttribute('frameborder', '0');
+                        iframe.setAttribute('allowfullscreen', '');
+                        iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+                        heroMedia.appendChild(iframe);
+                    } else if (firstItem.type === 'video') {
+                        const video = document.createElement('video');
+                        video.src = firstItem.url;
+                        video.controls = true;
+                        video.preload = 'metadata';
+                        heroMedia.appendChild(video);
+                    } else {
+                        const img = document.createElement('img');
+                        img.src = firstItem.url;
+                        img.alt = project.title;
+                        heroMedia.appendChild(img);
+                    }
+
+                    heroSection.appendChild(heroMedia);
+                    heroSection.style.display = 'block';
+                } else {
+                    heroSection.style.display = 'none';
+                }
+
+                // Set description
+                const descriptionSection = document.getElementById('projectDetailDescriptionSection');
+                const descriptionEl = document.getElementById('projectDetailDescription');
+                descriptionEl.textContent = project.description || 'No description available.';
+                descriptionSection.style.display = project.description ? 'block' : 'none';
+
+                // Populate Gallery (remaining media items)
+                const gallery = document.getElementById('projectDetailGallery');
+                gallery.innerHTML = '';
+
+                // Render gallery items (skip first item as it's in hero)
+                const galleryItems = mediaItems.slice(1);
+
+                galleryItems.forEach((item, index) => {
+                    const galleryItem = document.createElement('div');
+                    galleryItem.className = 'gallery-item';
+
+                    if (item.type === 'youtube') {
+                        const iframe = document.createElement('iframe');
+                        iframe.src = `https://www.youtube.com/embed/${item.id}`;
+                        iframe.setAttribute('frameborder', '0');
+                        iframe.setAttribute('allowfullscreen', '');
+                        iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+                        galleryItem.appendChild(iframe);
+                        galleryItem.style.cursor = 'default';
+                    } else if (item.type === 'video') {
+                        const video = document.createElement('video');
+                        video.src = item.url;
+                        video.muted = true;
+                        video.loop = true;
+                        video.preload = 'metadata';
+                        galleryItem.appendChild(video);
+
+                        // Click to open in lightbox (index + 1 because we skipped first)
+                        galleryItem.addEventListener('click', () => {
+                            this.openLightbox(mediaItems, index + 1);
+                        });
+                    } else {
+                        const img = document.createElement('img');
+                        img.src = item.thumbnail || item.url;
+                        img.alt = project.title;
+                        img.loading = 'lazy';
+                        galleryItem.appendChild(img);
+
+                        // Click to open in lightbox (index + 1 because we skipped first)
+                        galleryItem.addEventListener('click', () => {
+                            this.openLightbox(mediaItems, index + 1);
+                        });
+                    }
+
+                    gallery.appendChild(galleryItem);
+                });
+
+                // Hide gallery if no additional media
+                gallery.style.display = galleryItems.length > 0 ? 'grid' : 'none';
+            }
+
+            setupGalleryParallax() {
+                // Disabled parallax for cleaner Turfmapp-style layout
+                // Images now display in full-width static format
+            }
+
+            closeProjectDetail() {
+                const backdrop = document.getElementById('projectDetailBackdrop');
+                const modal = document.getElementById('projectDetailModal');
+
+                backdrop.classList.remove('visible');
+                modal.classList.remove('visible');
+
+                // Clear state
+                this.currentProjectDetail = null;
+
+                // Re-enable movement
+                this.enableMovement();
+
+                // Restore body scroll
+                document.body.style.overflow = '';
+            }
+
+            navigateProject(direction) {
+                if (!this.currentProjectDetail) return;
+
+                const { allProjects, projectIndex } = this.currentProjectDetail;
+                let newIndex = projectIndex;
+
+                if (direction === 'prev' && projectIndex > 0) {
+                    newIndex = projectIndex - 1;
+                } else if (direction === 'next' && projectIndex < allProjects.length - 1) {
+                    newIndex = projectIndex + 1;
+                } else {
+                    return; // No navigation needed
+                }
+
+                const newProject = allProjects[newIndex];
+                this.currentProjectDetail.project = newProject;
+                this.currentProjectDetail.projectIndex = newIndex;
+
+                // Update modal content
+                this.populateProjectDetail(newProject);
+
+                // Update navigation buttons visibility
+                const prevBtn = document.getElementById('projectPrevBtn');
+                const nextBtn = document.getElementById('projectNextBtn');
+
+                prevBtn.style.display = newIndex > 0 ? 'flex' : 'none';
+                nextBtn.style.display = newIndex < allProjects.length - 1 ? 'flex' : 'none';
+
+                // Scroll to top of modal
+                document.getElementById('projectDetailModal').scrollTop = 0;
+            }
+
+            setupProjectDetailListeners() {
+                // Close button
+                document.getElementById('projectDetailClose').addEventListener('click', () => {
+                    this.closeProjectDetail();
+                });
+
+                // Backdrop click
+                document.getElementById('projectDetailBackdrop').addEventListener('click', () => {
+                    this.closeProjectDetail();
+                });
+
+                // Navigation buttons
+                document.getElementById('projectPrevBtn').addEventListener('click', () => {
+                    this.navigateProject('prev');
+                });
+
+                document.getElementById('projectNextBtn').addEventListener('click', () => {
+                    this.navigateProject('next');
+                });
+
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    // Only handle if project detail is visible
+                    const modal = document.getElementById('projectDetailModal');
+                    if (!modal.classList.contains('visible')) return;
+
+                    // Don't handle if lightbox is open
+                    const lightbox = document.getElementById('lightbox');
+                    if (lightbox && lightbox.classList.contains('visible')) return;
+
+                    if (e.key === 'Escape') {
+                        this.closeProjectDetail();
+                    } else if (e.key === 'ArrowLeft') {
+                        this.navigateProject('prev');
+                    } else if (e.key === 'ArrowRight') {
+                        this.navigateProject('next');
+                    }
+                });
+            }
+
+            // Lightbox Methods
+            openLightbox(mediaItems, startIndex) {
+                // Filter out YouTube items for lightbox (they don't work well in lightbox)
+                const lightboxMedia = mediaItems.filter(item => item.type !== 'youtube');
+
+                if (lightboxMedia.length === 0) return;
+
+                // Adjust start index after filtering
+                let adjustedIndex = startIndex;
+                for (let i = 0; i < startIndex; i++) {
+                    if (mediaItems[i].type === 'youtube') {
+                        adjustedIndex--;
+                    }
+                }
+                adjustedIndex = Math.max(0, Math.min(adjustedIndex, lightboxMedia.length - 1));
+
+                // Store state
+                this.currentLightbox = {
+                    mediaItems: lightboxMedia,
+                    currentIndex: adjustedIndex
+                };
+
+                // Show lightbox
+                const backdrop = document.getElementById('lightboxBackdrop');
+                const lightbox = document.getElementById('lightbox');
+
+                backdrop.classList.add('visible');
+                lightbox.classList.add('visible');
+
+                // Display current media
+                this.displayLightboxMedia();
+
+                // Set up event listeners (only once)
+                if (!this.lightboxListenersAdded) {
+                    this.setupLightboxListeners();
+                    this.lightboxListenersAdded = true;
+                }
+            }
+
+            displayLightboxMedia() {
+                if (!this.currentLightbox) return;
+
+                const { mediaItems, currentIndex } = this.currentLightbox;
+                const item = mediaItems[currentIndex];
+                const content = document.getElementById('lightboxContent');
+
+                // Clear content
+                content.innerHTML = '';
+
+                // Create media element
+                if (item.type === 'video') {
+                    const video = document.createElement('video');
+                    video.src = item.url;
+                    video.controls = true;
+                    video.autoplay = true;
+                    video.style.maxWidth = '90vw';
+                    video.style.maxHeight = '90vh';
+                    video.style.objectFit = 'contain';
+                    content.appendChild(video);
+                } else {
+                    const img = document.createElement('img');
+                    img.src = item.url;
+                    img.alt = 'Project media';
+                    img.style.maxWidth = '90vw';
+                    img.style.maxHeight = '90vh';
+                    img.style.objectFit = 'contain';
+                    content.appendChild(img);
+                }
+
+                // Update navigation button visibility
+                const prevBtn = document.getElementById('lightboxPrev');
+                const nextBtn = document.getElementById('lightboxNext');
+
+                prevBtn.style.display = currentIndex > 0 ? 'flex' : 'none';
+                nextBtn.style.display = currentIndex < mediaItems.length - 1 ? 'flex' : 'none';
+            }
+
+            closeLightbox() {
+                const backdrop = document.getElementById('lightboxBackdrop');
+                const lightbox = document.getElementById('lightbox');
+
+                backdrop.classList.remove('visible');
+                lightbox.classList.remove('visible');
+
+                // Clear content
+                document.getElementById('lightboxContent').innerHTML = '';
+
+                // Clear state
+                this.currentLightbox = null;
+            }
+
+            navigateLightbox(direction) {
+                if (!this.currentLightbox) return;
+
+                const { mediaItems, currentIndex } = this.currentLightbox;
+                let newIndex = currentIndex;
+
+                if (direction === 'prev' && currentIndex > 0) {
+                    newIndex = currentIndex - 1;
+                } else if (direction === 'next' && currentIndex < mediaItems.length - 1) {
+                    newIndex = currentIndex + 1;
+                } else {
+                    return; // No navigation needed
+                }
+
+                this.currentLightbox.currentIndex = newIndex;
+                this.displayLightboxMedia();
+            }
+
+            setupLightboxListeners() {
+                // Close button
+                document.getElementById('lightboxClose').addEventListener('click', () => {
+                    this.closeLightbox();
+                });
+
+                // Backdrop click
+                document.getElementById('lightboxBackdrop').addEventListener('click', () => {
+                    this.closeLightbox();
+                });
+
+                // Navigation buttons
+                document.getElementById('lightboxPrev').addEventListener('click', () => {
+                    this.navigateLightbox('prev');
+                });
+
+                document.getElementById('lightboxNext').addEventListener('click', () => {
+                    this.navigateLightbox('next');
+                });
+
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    // Only handle if lightbox is visible
+                    const lightbox = document.getElementById('lightbox');
+                    if (!lightbox.classList.contains('visible')) return;
+
+                    if (e.key === 'Escape') {
+                        this.closeLightbox();
+                    } else if (e.key === 'ArrowLeft') {
+                        this.navigateLightbox('prev');
+                    } else if (e.key === 'ArrowRight') {
+                        this.navigateLightbox('next');
+                    }
+                });
             }
         }
 
