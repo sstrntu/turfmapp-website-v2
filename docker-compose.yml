@@ -3,7 +3,7 @@ services:
     container_name: v2-turfmapp-app
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.debian
     expose:
       - "3000"
     networks:
