@@ -2,7 +2,7 @@ FROM node:22-alpine AS base
 
 # Install dependencies for native modules (bcrypt, sharp, sqlite3)
 FROM base AS deps
-RUN apk add --no-cache libc6-compat python3 make g++ vips-dev
+RUN apk add --no-cache libc6-compat python3 py3-setuptools make g++ vips-dev pkgconfig
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
