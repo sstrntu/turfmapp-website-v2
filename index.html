@@ -122,8 +122,9 @@ Debug Mode: Press 'D' to show camera position
         .hotspot:focus {
             background: rgba(0, 150, 255, 0.15);
             outline: none;
-            z-index: 5;
+            z-index: 999;
             /* Bring to front on hover */
+            transform: scale(3) !important;
         }
 
         /* Add a slightly larger hover detection area */
@@ -156,7 +157,7 @@ Debug Mode: Press 'D' to show camera position
         .hotspot:hover::after {
             animation: none;
             background: rgba(0, 150, 255, 1);
-            transform: translate(-50%, -50%) scale(1.1);
+            transform: translate(-50%, -50%) scale(1);
             box-shadow: 0 0 8px rgba(0, 150, 255, 0.6);
         }
 
@@ -251,26 +252,18 @@ Debug Mode: Press 'D' to show camera position
         }
 
         .hotspot:hover {
-            transform: scale(1.3);
+            transform: scale(3) !important;
             background: rgba(0, 123, 255, 1);
             border-color: rgba(255, 255, 255, 1);
             box-shadow:
                 0 6px 20px rgba(0, 123, 255, 0.5),
                 0 4px 12px rgba(0, 0, 0, 0.3);
             animation: none;
+            z-index: 999;
         }
 
         .hotspot:active {
-            transform: scale(1.1);
-        }
-
-        .hotspot::before {
-            content: '';
-            width: 10px;
-            height: 10px;
-            background: white;
-            border-radius: 50%;
-            opacity: 0.9;
+            transform: scale(2.8) !important;
         }
 
         @keyframes pulse {
@@ -313,8 +306,8 @@ Debug Mode: Press 'D' to show camera position
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 12px;
             padding: 0;
-            width: 480px;
-            height: 400px;
+            width: 540px;
+            height: 450px;
             z-index: 2000;
             opacity: 0;
             visibility: hidden;
@@ -347,9 +340,25 @@ Debug Mode: Press 'D' to show camera position
         }
 
         .tooltip-content {
-            max-height: 320px;
+            max-height: 370px;
             overflow-y: auto;
             padding: 16px;
+            display: grid;
+            grid-gap: 12px;
+            row-gap: 24px;
+            align-items: start;
+        }
+
+        .tooltip-content.grid-1 {
+            grid-template-columns: 1fr;
+        }
+
+        .tooltip-content.grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .tooltip-content.grid-3 {
+            grid-template-columns: repeat(3, 1fr);
         }
 
         .tooltip-content::-webkit-scrollbar {
@@ -370,88 +379,128 @@ Debug Mode: Press 'D' to show camera position
             background: rgba(255, 255, 255, 0.5);
         }
 
-        .project-item {
-            margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .project-item:last-child {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
-        }
-
-        .project-title {
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-            margin: 0 0 8px 0;
-            line-height: 1.3;
-            transition: opacity 0.2s ease;
-        }
-
-        .project-title:hover {
-            opacity: 0.8;
-        }
-
-        .project-description {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 13px;
-            margin: 0 0 12px 0;
-            line-height: 1.5;
-        }
-
-        .project-links {
+        /* Grid Thumbnail Styles */
+        .project-grid-item {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            margin-top: 8px;
+            gap: 4px;
         }
 
-        .project-link {
-            color: #007BFF;
+        .project-grid-title {
+            color: white;
             font-size: 13px;
-            text-decoration: none;
-            transition: color 0.2s ease;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.3;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            min-height: 34px;
+            max-height: 34px;
         }
 
-        .project-link:hover {
-            color: #0056b3;
-            text-decoration: underline;
+        .project-grid-title.two-line {
+            font-size: 12px;
+            line-height: 1.3;
         }
 
-        .project-media {
+        .project-grid-title:hover {
+            opacity: 0.7;
+        }
+
+        .project-thumbnail {
             position: relative;
             width: 100%;
+            background: #000;
             border-radius: 8px;
             overflow: hidden;
             cursor: pointer;
-            transition: transform 0.2s ease;
-            margin-bottom: 8px;
+            transition: all 0.2s ease;
         }
 
-        .project-media:last-of-type {
-            margin-bottom: 0;
+        .project-thumbnail:hover {
+            transform: scale(1.05);
+            transform-origin: top center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            z-index: 10;
         }
 
-        .project-media:hover {
-            transform: scale(1.02);
-        }
-
-        .project-media img,
-        .project-media video {
+        .project-thumbnail img,
+        .project-thumbnail video {
             width: 100%;
             height: auto;
-            max-height: 200px;
-            object-fit: contain;
             display: block;
-            background: #000;
         }
 
-        .project-media iframe {
-            display: block;
-            border: none;
+        .project-thumbnail.loading {
+            min-height: 150px;
+            background: linear-gradient(
+                90deg,
+                #1a1818 0%,
+                #2a2828 50%,
+                #1a1818 100%
+            );
+            background-size: 200% 100%;
+            animation: loading 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .project-thumbnail .placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 150px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            text-align: center;
+            padding: 8px;
+        }
+
+        /* Play icon overlay for video thumbnails */
+        .project-thumbnail .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+        .project-thumbnail:hover .play-icon {
+            background: rgba(0, 123, 255, 0.9);
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .project-thumbnail .play-icon::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 12px 0 12px 20px;
+            border-color: transparent transparent transparent white;
+            margin-left: 4px;
         }
 
         /* Video Player Modal */
@@ -577,15 +626,17 @@ Debug Mode: Press 'D' to show camera position
         }
 
         .hotspot:hover {
-            transform: scale(1.15);
+            transform: scale(3) !important;
             background: radial-gradient(circle, rgba(0, 150, 255, 1) 0%, rgba(0, 150, 255, 0.6) 70%, transparent 100%);
             box-shadow:
                 0 0 20px rgba(0, 150, 255, 0.6),
                 0 0 40px rgba(0, 150, 255, 0.3),
                 0 0 60px rgba(0, 150, 255, 0.1);
             border-color: rgba(0, 150, 255, 1);
-            animation: none;
+            animation: none !important;
             /* Stop pulse on hover */
+            cursor: pointer;
+            z-index: 999;
         }
 
         .hotspot:focus {
@@ -594,7 +645,7 @@ Debug Mode: Press 'D' to show camera position
         }
 
         .hotspot:active {
-            transform: scale(1.05);
+            transform: scale(2.8) !important;
             transition-duration: 0.1s;
         }
 
@@ -635,6 +686,12 @@ Debug Mode: Press 'D' to show camera position
 
             .tooltip-description {
                 font-size: 12px;
+            }
+
+            .tooltip-content,
+            .mobile-modal-content {
+                grid-gap: 8px;
+                padding: 12px;
             }
         }
 
@@ -738,6 +795,28 @@ Debug Mode: Press 'D' to show camera position
                 overflow-y: auto;
                 padding: 20px;
                 -webkit-overflow-scrolling: touch;
+                display: grid;
+                grid-gap: 12px;
+                row-gap: 24px;
+                align-items: start;
+            }
+
+            .mobile-modal-content.grid-1 {
+                grid-template-columns: 1fr;
+            }
+
+            .mobile-modal-content.grid-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .mobile-modal-content.grid-3 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            @media (min-width: 500px) {
+                .mobile-modal-content.grid-3 {
+                    grid-template-columns: repeat(3, 1fr);
+                }
             }
 
             /* Larger hotspots for touch */
@@ -775,6 +854,21 @@ Debug Mode: Press 'D' to show camera position
 
         /* Import Modern Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+        /* Local Font Files */
+        @font-face {
+            font-family: 'Satoshi';
+            src: url('Satoshi-Regular.otf') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Boldonese';
+            src: url('Boldonse-Regular.ttf') format('truetype');
+            font-weight: 600;
+            font-style: normal;
+        }
 
         /* Project Detail Modal - Tooltip Style */
         .project-detail-backdrop {
@@ -965,27 +1059,99 @@ Debug Mode: Press 'D' to show camera position
             display: block;
         }
 
-        /* Description Section */
-        .project-detail-description-section {
+        /* Main Project Description */
+        .project-main-description {
             margin: 60px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
         }
 
-        .description-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 24px;
+        .project-main-title {
+            font-family: 'Boldonese', serif;
+            font-size: 40px;
             font-weight: 600;
-            margin: 0 0 20px 0;
+            line-height: 1.5;
+            margin: 0;
             color: white;
         }
 
-        .project-detail-description {
-            font-size: 16px;
-            line-height: 1.8;
+        .project-main-body {
+            font-family: 'Satoshi', sans-serif;
+            font-size: 20px;
+            font-weight: 400;
+            line-height: 1.5;
             color: rgba(255, 255, 255, 0.85);
             margin: 0;
-            max-width: none;
+            white-space: pre-wrap;
+        }
+
+        /* Project Sections */
+        .project-sections {
+            margin: 60px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 80px;
+        }
+
+        .project-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .section-photos {
+            display: grid;
+            gap: 16px;
+            width: 100%;
+        }
+
+        .section-photos.single-photo {
+            grid-template-columns: 1fr;
+        }
+
+        .section-photos.double-photo {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .section-photo {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #000;
+        }
+
+        .section-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .section-text {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .section-title {
+            font-family: 'Boldonese', serif;
+            font-size: 40px;
+            font-weight: 600;
+            line-height: 1.5;
+            margin: 0;
+            color: white;
+        }
+
+        .section-body {
+            font-family: 'Satoshi', sans-serif;
+            font-size: 20px;
             font-weight: 400;
-            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.85);
+            margin: 0;
+            white-space: pre-wrap;
         }
 
         /* Gallery Section - Grid Layout */
@@ -1161,12 +1327,32 @@ Debug Mode: Press 'D' to show camera position
                 min-height: 350px;
             }
 
-            .description-title {
-                font-size: 20px;
+            .project-main-title {
+                font-size: 32px;
             }
 
-            .project-detail-description {
-                font-size: 15px;
+            .project-main-body {
+                font-size: 18px;
+            }
+
+            .section-title {
+                font-size: 32px;
+            }
+
+            .section-body {
+                font-size: 18px;
+            }
+
+            .section-photos.double-photo {
+                grid-template-columns: 1fr;
+            }
+
+            .project-sections {
+                gap: 60px;
+            }
+
+            .project-main-description {
+                margin: 48px 0;
             }
 
             .project-detail-gallery {
@@ -1234,12 +1420,29 @@ Debug Mode: Press 'D' to show camera position
                 min-height: 250px;
             }
 
-            .description-title {
-                font-size: 18px;
+            .project-main-title {
+                font-size: 28px;
             }
 
-            .project-detail-description {
-                font-size: 14px;
+            .project-main-body {
+                font-size: 16px;
+            }
+
+            .section-title {
+                font-size: 28px;
+            }
+
+            .section-body {
+                font-size: 16px;
+            }
+
+            .project-sections {
+                gap: 48px;
+                margin: 40px 0;
+            }
+
+            .project-main-description {
+                margin: 40px 0;
             }
 
             .project-detail-gallery {
@@ -1432,11 +1635,11 @@ Debug Mode: Press 'D' to show camera position
             <!-- Hero Media -->
             <div id="projectDetailHero" class="project-detail-hero"></div>
 
-            <!-- Description Section -->
-            <div id="projectDetailDescriptionSection" class="project-detail-description-section">
-                <h2 class="description-title">Description</h2>
-                <p id="projectDetailDescription" class="project-detail-description"></p>
-            </div>
+            <!-- Main Project Description -->
+            <div id="projectMainDescription" class="project-main-description"></div>
+
+            <!-- Project Sections -->
+            <div id="projectSections" class="project-sections"></div>
 
             <!-- Media Gallery -->
             <div id="projectDetailGallery" class="project-detail-gallery"></div>
@@ -2166,166 +2369,109 @@ Debug Mode: Press 'D' to show camera position
                     tooltipData.projects = [];
                 }
 
+                // Determine grid class based on project count
+                const projectCount = tooltipData.projects.length;
+                let gridClass = 'grid-3'; // Default: 3 columns for 3+ projects
+                if (projectCount === 1) {
+                    gridClass = 'grid-1';
+                } else if (projectCount === 2) {
+                    gridClass = 'grid-2';
+                }
+                content.className = `tooltip-content ${gridClass}`;
+
+                // Render thumbnails in grid
                 tooltipData.projects.forEach((project, projectIndex) => {
-                    const projectItem = document.createElement('div');
-                    projectItem.className = 'project-item';
+                    const thumbnail = this.getThumbnailForProject(project);
 
-                    const hasLink = project.links && project.links.length > 0;
+                    // Create grid item wrapper
+                    const gridItem = document.createElement('div');
+                    gridItem.className = 'project-grid-item';
 
-                    // Create project title
-                    const title = document.createElement('h3');
-                    title.className = 'project-title';
+                    // Create title
+                    const titleEl = document.createElement('h3');
+                    titleEl.className = 'project-grid-title';
+                    titleEl.textContent = project.title || 'Untitled Project';
 
-                    // Add partner label based on 'under' field
-                    let titleText = project.title || 'Untitled Project';
-                    const under = project.under || 'Turfmapp';
-
-                    if (under !== 'Turfmapp') {
-                        titleText += ` - Partnered with ${under}`;
-                    }
-
-                    title.textContent = titleText;
-
-                    // Make title clickable - opens project detail modal
-                    title.style.cursor = 'pointer';
-                    title.style.textDecoration = 'underline';
-                    title.addEventListener('click', () => {
-                        // Close tooltip first
+                    // Add click handler to title
+                    titleEl.addEventListener('click', () => {
                         this.hideTooltip();
-                        // Open project detail modal
                         this.openProjectDetail(project, tooltipData.projects, projectIndex);
                     });
 
-                    projectItem.appendChild(title);
+                    gridItem.appendChild(titleEl);
 
-                    // Add project description right after title
-                    if (project.description) {
-                        const description = document.createElement('p');
-                        description.className = 'project-description';
-                        description.textContent = project.description;
-                        projectItem.appendChild(description);
-                    }
-
-                    // Display YouTube video if available (highest priority)
-                    if (project.youtube_url) {
-                        const mediaContainer = document.createElement('div');
-                        mediaContainer.className = 'project-media';
-
-                        const youtubeId = this.getYouTubeVideoId(project.youtube_url);
-                        if (youtubeId) {
-                            const iframe = document.createElement('iframe');
-                            iframe.src = `https://www.youtube.com/embed/${youtubeId}`;
-                            iframe.setAttribute('frameborder', '0');
-                            iframe.setAttribute('allowfullscreen', '');
-                            iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
-                            iframe.style.width = '100%';
-                            iframe.style.height = '200px';
-                            iframe.style.borderRadius = '8px';
-                            mediaContainer.appendChild(iframe);
-
-                            if (hasLink) {
-                                mediaContainer.style.cursor = 'pointer';
-                                mediaContainer.addEventListener('click', (e) => {
-                                    if (e.target === mediaContainer) {
-                                        window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
-                                    }
-                                });
-                            }
-
-                            projectItem.appendChild(mediaContainer);
+                    // Check if title wraps to two lines and adjust font size
+                    setTimeout(() => {
+                        const lineHeight = parseFloat(getComputedStyle(titleEl).lineHeight);
+                        const height = titleEl.scrollHeight;
+                        if (height > lineHeight * 1.5) {
+                            titleEl.classList.add('two-line');
                         }
-                    }
+                    }, 0);
 
-                    // Display all media from media array (new format)
-                    if (project.media && Array.isArray(project.media) && project.media.length > 0) {
-                        project.media.forEach(mediaItem => {
-                            const mediaContainer = document.createElement('div');
-                            mediaContainer.className = 'project-media';
+                    // Create thumbnail container
+                    const thumbnailDiv = document.createElement('div');
+                    thumbnailDiv.className = 'project-thumbnail loading';
 
-                            if (mediaItem.type === 'video') {
-                                const video = document.createElement('video');
-                                video.src = mediaItem.url;
-                                video.muted = true;
-                                video.preload = 'metadata';
-                                mediaContainer.appendChild(video);
+                    // Add click handler to open project detail
+                    thumbnailDiv.addEventListener('click', () => {
+                        this.hideTooltip();
+                        this.openProjectDetail(project, tooltipData.projects, projectIndex);
+                    });
 
-                                mediaContainer.addEventListener('click', () => {
-                                    // Close tooltip/modal and open project detail modal
-                                    this.hideTooltip();
-                                    this.openProjectDetail(project, tooltipData.projects, projectIndex);
-                                });
-                            } else {
-                                const img = document.createElement('img');
-                                img.src = mediaItem.url;
-                                img.alt = project.title;
-                                mediaContainer.appendChild(img);
-
-                                mediaContainer.addEventListener('click', () => {
-                                    // Close tooltip/modal and open project detail modal
-                                    this.hideTooltip();
-                                    this.openProjectDetail(project, tooltipData.projects, projectIndex);
-                                });
-                            }
-
-                            projectItem.appendChild(mediaContainer);
-                        });
-                    } else if (project.image_url || project.video_url) {
-                        // Fallback: Display single media (old format for backward compatibility)
-                        const mediaContainer = document.createElement('div');
-                        mediaContainer.className = 'project-media';
-
-                        const mediaUrl = project.video_url || project.image_url;
-                        const isVideo = !!project.video_url;
-
-                        if (isVideo) {
+                    if (thumbnail) {
+                        if (thumbnail.isVideo) {
+                            // Render video thumbnail
                             const video = document.createElement('video');
-                            video.src = mediaUrl;
+                            video.src = thumbnail.url;
                             video.muted = true;
                             video.preload = 'metadata';
-                            mediaContainer.appendChild(video);
 
-                            mediaContainer.addEventListener('click', () => {
-                                // Close tooltip/modal and open project detail modal
-                                this.hideTooltip();
-                                this.openProjectDetail(project, tooltipData.projects, projectIndex);
+                            video.addEventListener('loadeddata', () => {
+                                thumbnailDiv.classList.remove('loading');
                             });
+
+                            video.addEventListener('error', () => {
+                                thumbnailDiv.classList.remove('loading');
+                                thumbnailDiv.innerHTML = `<div class="placeholder">No preview</div>`;
+                            });
+
+                            thumbnailDiv.appendChild(video);
+
+                            // Add play icon overlay for non-YouTube videos
+                            const playIcon = document.createElement('div');
+                            playIcon.className = 'play-icon';
+                            thumbnailDiv.appendChild(playIcon);
                         } else {
+                            // Render image thumbnail
                             const img = document.createElement('img');
-                            img.src = mediaUrl;
-                            img.alt = project.title;
-                            mediaContainer.appendChild(img);
+                            img.src = thumbnail.url;
+                            img.alt = project.title || 'Project thumbnail';
 
-                            mediaContainer.addEventListener('click', () => {
-                                // Close tooltip/modal and open project detail modal
-                                this.hideTooltip();
-                                this.openProjectDetail(project, tooltipData.projects, projectIndex);
+                            img.addEventListener('load', () => {
+                                thumbnailDiv.classList.remove('loading');
                             });
+
+                            img.addEventListener('error', () => {
+                                // If YouTube maxresdefault fails, try hqdefault
+                                if (thumbnail.type === 'youtube' && thumbnail.url.includes('maxresdefault')) {
+                                    img.src = `https://img.youtube.com/vi/${thumbnail.youtubeId}/hqdefault.jpg`;
+                                } else {
+                                    thumbnailDiv.classList.remove('loading');
+                                    thumbnailDiv.innerHTML = `<div class="placeholder">No preview</div>`;
+                                }
+                            });
+
+                            thumbnailDiv.appendChild(img);
                         }
-
-                        projectItem.appendChild(mediaContainer);
+                    } else {
+                        // No thumbnail available - show placeholder
+                        thumbnailDiv.classList.remove('loading');
+                        thumbnailDiv.innerHTML = `<div class="placeholder">No preview</div>`;
                     }
 
-                    // Add project links as text ONLY if there's no media
-                    // (If media exists, links are embedded in the media)
-                    const hasMedia = project.youtube_url || (project.media && project.media.length > 0) || project.image_url || project.video_url;
-                    if (!hasMedia && project.links && project.links.length > 0) {
-                        const linksContainer = document.createElement('div');
-                        linksContainer.className = 'project-links';
-
-                        project.links.forEach(link => {
-                            const linkEl = document.createElement('a');
-                            linkEl.href = link.url;
-                            linkEl.textContent = link.text;
-                            linkEl.className = 'project-link';
-                            linkEl.target = '_blank';
-                            linkEl.rel = 'noopener noreferrer';
-                            linksContainer.appendChild(linkEl);
-                        });
-
-                        projectItem.appendChild(linksContainer);
-                    }
-
-                    content.appendChild(projectItem);
+                    gridItem.appendChild(thumbnailDiv);
+                    content.appendChild(gridItem);
                 });
 
                 // Remove visible class but keep tooltip in DOM for positioning
@@ -2373,166 +2519,109 @@ Debug Mode: Press 'D' to show camera position
                     document.body.style.overflow = '';
                 };
 
-                // Render projects (same logic as desktop tooltip)
+                // Determine grid class based on project count
+                const projectCount = tooltipData.projects.length;
+                let gridClass = 'grid-3'; // Default: 3 columns for 3+ projects
+                if (projectCount === 1) {
+                    gridClass = 'grid-1';
+                } else if (projectCount === 2) {
+                    gridClass = 'grid-2';
+                }
+                modalContent.className = `mobile-modal-content ${gridClass}`;
+
+                // Render thumbnails in grid
                 tooltipData.projects.forEach((project, projectIndex) => {
-                    const projectItem = document.createElement('div');
-                    projectItem.className = 'project-item';
+                    const thumbnail = this.getThumbnailForProject(project);
 
-                    const hasLink = project.links && project.links.length > 0;
+                    // Create grid item wrapper
+                    const gridItem = document.createElement('div');
+                    gridItem.className = 'project-grid-item';
 
-                    // Create project title
-                    const title = document.createElement('h3');
-                    title.className = 'project-title';
+                    // Create title
+                    const titleEl = document.createElement('h3');
+                    titleEl.className = 'project-grid-title';
+                    titleEl.textContent = project.title || 'Untitled Project';
 
-                    // Add partner label based on 'under' field
-                    let titleText = project.title || 'Untitled Project';
-                    const under = project.under || 'Turfmapp';
-
-                    if (under !== 'Turfmapp') {
-                        titleText += ` - Partnered with ${under}`;
-                    }
-
-                    title.textContent = titleText;
-
-                    // Make title clickable - opens project detail modal
-                    title.style.cursor = 'pointer';
-                    title.style.textDecoration = 'underline';
-                    title.addEventListener('click', () => {
-                        // Close mobile modal first
+                    // Add click handler to title
+                    titleEl.addEventListener('click', () => {
                         closeMobileModal();
-                        // Open project detail modal
                         this.openProjectDetail(project, tooltipData.projects, projectIndex);
                     });
 
-                    projectItem.appendChild(title);
+                    gridItem.appendChild(titleEl);
 
-                    // Add project description right after title
-                    if (project.description) {
-                        const description = document.createElement('p');
-                        description.className = 'project-description';
-                        description.textContent = project.description;
-                        projectItem.appendChild(description);
-                    }
-
-                    // Display YouTube video if available (highest priority)
-                    if (project.youtube_url) {
-                        const mediaContainer = document.createElement('div');
-                        mediaContainer.className = 'project-media';
-
-                        const youtubeId = this.getYouTubeVideoId(project.youtube_url);
-                        if (youtubeId) {
-                            const iframe = document.createElement('iframe');
-                            iframe.src = `https://www.youtube.com/embed/${youtubeId}`;
-                            iframe.setAttribute('frameborder', '0');
-                            iframe.setAttribute('allowfullscreen', '');
-                            iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
-                            iframe.style.width = '100%';
-                            iframe.style.height = '200px';
-                            iframe.style.borderRadius = '8px';
-                            mediaContainer.appendChild(iframe);
-
-                            if (hasLink) {
-                                mediaContainer.style.cursor = 'pointer';
-                                mediaContainer.addEventListener('click', (e) => {
-                                    if (e.target === mediaContainer) {
-                                        window.open(project.links[0].url, '_blank', 'noopener,noreferrer');
-                                    }
-                                });
-                            }
-
-                            projectItem.appendChild(mediaContainer);
+                    // Check if title wraps to two lines and adjust font size
+                    setTimeout(() => {
+                        const lineHeight = parseFloat(getComputedStyle(titleEl).lineHeight);
+                        const height = titleEl.scrollHeight;
+                        if (height > lineHeight * 1.5) {
+                            titleEl.classList.add('two-line');
                         }
-                    }
+                    }, 0);
 
-                    // Display all media from media array (new format)
-                    if (project.media && Array.isArray(project.media) && project.media.length > 0) {
-                        project.media.forEach(mediaItem => {
-                            const mediaContainer = document.createElement('div');
-                            mediaContainer.className = 'project-media';
+                    // Create thumbnail container
+                    const thumbnailDiv = document.createElement('div');
+                    thumbnailDiv.className = 'project-thumbnail loading';
 
-                            if (mediaItem.type === 'video') {
-                                const video = document.createElement('video');
-                                video.src = mediaItem.url;
-                                video.muted = true;
-                                video.preload = 'metadata';
-                                mediaContainer.appendChild(video);
+                    // Add click handler to close modal and open project detail
+                    thumbnailDiv.addEventListener('click', () => {
+                        closeMobileModal();
+                        this.openProjectDetail(project, tooltipData.projects, projectIndex);
+                    });
 
-                                mediaContainer.addEventListener('click', () => {
-                                    // Close mobile modal and open project detail modal
-                                    closeMobileModal();
-                                    this.openProjectDetail(project, tooltipData.projects, projectIndex);
-                                });
-                            } else {
-                                const img = document.createElement('img');
-                                img.src = mediaItem.url;
-                                img.alt = project.title;
-                                mediaContainer.appendChild(img);
-
-                                mediaContainer.addEventListener('click', () => {
-                                    // Close mobile modal and open project detail modal
-                                    closeMobileModal();
-                                    this.openProjectDetail(project, tooltipData.projects, projectIndex);
-                                });
-                            }
-
-                            projectItem.appendChild(mediaContainer);
-                        });
-                    } else if (project.image_url || project.video_url) {
-                        // Fallback: Display single media (old format for backward compatibility)
-                        const mediaContainer = document.createElement('div');
-                        mediaContainer.className = 'project-media';
-
-                        const mediaUrl = project.video_url || project.image_url;
-                        const isVideo = !!project.video_url;
-
-                        if (isVideo) {
+                    if (thumbnail) {
+                        if (thumbnail.isVideo) {
+                            // Render video thumbnail
                             const video = document.createElement('video');
-                            video.src = mediaUrl;
+                            video.src = thumbnail.url;
                             video.muted = true;
                             video.preload = 'metadata';
-                            mediaContainer.appendChild(video);
 
-                            mediaContainer.addEventListener('click', () => {
-                                // Close mobile modal and open project detail modal
-                                closeMobileModal();
-                                this.openProjectDetail(project, tooltipData.projects, projectIndex);
+                            video.addEventListener('loadeddata', () => {
+                                thumbnailDiv.classList.remove('loading');
                             });
+
+                            video.addEventListener('error', () => {
+                                thumbnailDiv.classList.remove('loading');
+                                thumbnailDiv.innerHTML = `<div class="placeholder">No preview</div>`;
+                            });
+
+                            thumbnailDiv.appendChild(video);
+
+                            // Add play icon overlay for non-YouTube videos
+                            const playIcon = document.createElement('div');
+                            playIcon.className = 'play-icon';
+                            thumbnailDiv.appendChild(playIcon);
                         } else {
+                            // Render image thumbnail
                             const img = document.createElement('img');
-                            img.src = mediaUrl;
-                            img.alt = project.title;
-                            mediaContainer.appendChild(img);
+                            img.src = thumbnail.url;
+                            img.alt = project.title || 'Project thumbnail';
 
-                            mediaContainer.addEventListener('click', () => {
-                                // Close mobile modal and open project detail modal
-                                closeMobileModal();
-                                this.openProjectDetail(project, tooltipData.projects, projectIndex);
+                            img.addEventListener('load', () => {
+                                thumbnailDiv.classList.remove('loading');
                             });
+
+                            img.addEventListener('error', () => {
+                                // If YouTube maxresdefault fails, try hqdefault
+                                if (thumbnail.type === 'youtube' && thumbnail.url.includes('maxresdefault')) {
+                                    img.src = `https://img.youtube.com/vi/${thumbnail.youtubeId}/hqdefault.jpg`;
+                                } else {
+                                    thumbnailDiv.classList.remove('loading');
+                                    thumbnailDiv.innerHTML = `<div class="placeholder">No preview</div>`;
+                                }
+                            });
+
+                            thumbnailDiv.appendChild(img);
                         }
-
-                        projectItem.appendChild(mediaContainer);
+                    } else {
+                        // No thumbnail available - show placeholder
+                        thumbnailDiv.classList.remove('loading');
+                        thumbnailDiv.innerHTML = `<div class="placeholder">No preview</div>`;
                     }
 
-                    // Add project links as text ONLY if there's no media
-                    const hasMedia = project.youtube_url || (project.media && project.media.length > 0) || project.image_url || project.video_url;
-                    if (!hasMedia && project.links && project.links.length > 0) {
-                        const linksContainer = document.createElement('div');
-                        linksContainer.className = 'project-links';
-
-                        project.links.forEach(link => {
-                            const linkEl = document.createElement('a');
-                            linkEl.href = link.url;
-                            linkEl.textContent = link.text;
-                            linkEl.className = 'project-link';
-                            linkEl.target = '_blank';
-                            linkEl.rel = 'noopener noreferrer';
-                            linksContainer.appendChild(linkEl);
-                        });
-
-                        projectItem.appendChild(linksContainer);
-                    }
-
-                    modalContent.appendChild(projectItem);
+                    gridItem.appendChild(thumbnailDiv);
+                    modalContent.appendChild(gridItem);
                 });
 
                 // Show modal
@@ -2654,6 +2743,79 @@ Debug Mode: Press 'D' to show camera position
                     }
                 }
 
+                return null;
+            }
+
+            // Get thumbnail for a project (for grid view)
+            getThumbnailForProject(project) {
+                // Priority order:
+                // 1. directVideoUrl (Cloudflare R2, etc.)
+                // 2. media[0].thumbnail or media[0].url
+                // 3. image_url
+                // 4. YouTube thumbnail
+                // 5. video_url
+                // 6. null (placeholder)
+
+                // Check direct video URL first (highest priority)
+                if (project.directVideoUrl) {
+                    return {
+                        type: 'video',
+                        url: project.directVideoUrl,
+                        isVideo: true
+                    };
+                }
+
+                // Check media array
+                if (project.media && Array.isArray(project.media) && project.media.length > 0) {
+                    const firstMedia = project.media[0];
+                    if (firstMedia.thumbnail) {
+                        return {
+                            type: 'image',
+                            url: firstMedia.thumbnail,
+                            isVideo: false
+                        };
+                    }
+                    if (firstMedia.url) {
+                        return {
+                            type: firstMedia.type === 'video' ? 'video' : 'image',
+                            url: firstMedia.url,
+                            isVideo: firstMedia.type === 'video'
+                        };
+                    }
+                }
+
+                // Check image_url
+                if (project.image_url) {
+                    return {
+                        type: 'image',
+                        url: project.image_url,
+                        isVideo: false
+                    };
+                }
+
+                // Check YouTube URL
+                if (project.youtube_url) {
+                    const youtubeId = this.getYouTubeVideoId(project.youtube_url);
+                    if (youtubeId) {
+                        return {
+                            type: 'youtube',
+                            url: `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`,
+                            youtubeId: youtubeId,
+                            isVideo: false
+                        };
+                    }
+                }
+
+                // Check video_url
+                if (project.video_url) {
+                    return {
+                        type: 'video',
+                        url: project.video_url,
+                        isVideo: true
+                    };
+                }
+
+                // No thumbnail available
                 return null;
             }
 
@@ -2904,6 +3066,14 @@ Debug Mode: Press 'D' to show camera position
                 // Collect all media items
                 const mediaItems = [];
 
+                // Add direct video URL if available (highest priority for hero)
+                if (project.directVideoUrl) {
+                    mediaItems.push({
+                        type: 'direct-video',
+                        url: project.directVideoUrl
+                    });
+                }
+
                 // Add YouTube video if available
                 if (project.youtube_url) {
                     const youtubeId = this.getYouTubeVideoId(project.youtube_url);
@@ -2952,7 +3122,13 @@ Debug Mode: Press 'D' to show camera position
 
                     const firstItem = mediaItems[0];
 
-                    if (firstItem.type === 'youtube') {
+                    if (firstItem.type === 'direct-video') {
+                        const video = document.createElement('video');
+                        video.src = firstItem.url;
+                        video.controls = true;
+                        video.preload = 'metadata';
+                        heroMedia.appendChild(video);
+                    } else if (firstItem.type === 'youtube') {
                         const iframe = document.createElement('iframe');
                         iframe.src = `https://www.youtube.com/embed/${firstItem.id}`;
                         iframe.setAttribute('frameborder', '0');
@@ -2978,11 +3154,120 @@ Debug Mode: Press 'D' to show camera position
                     heroSection.style.display = 'none';
                 }
 
-                // Set description
-                const descriptionSection = document.getElementById('projectDetailDescriptionSection');
-                const descriptionEl = document.getElementById('projectDetailDescription');
-                descriptionEl.textContent = project.description || 'No description available.';
-                descriptionSection.style.display = project.description ? 'block' : 'none';
+                // Populate Main Description
+                const mainDescriptionContainer = document.getElementById('projectMainDescription');
+                mainDescriptionContainer.innerHTML = '';
+
+                if (project.mainDescription && (project.mainDescription.title || project.mainDescription.body)) {
+                    const mainDesc = project.mainDescription;
+
+                    if (mainDesc.title) {
+                        const titleEl = document.createElement('h2');
+                        titleEl.className = 'project-main-title';
+                        titleEl.textContent = mainDesc.title;
+                        mainDescriptionContainer.appendChild(titleEl);
+                    }
+
+                    if (mainDesc.body) {
+                        const bodyEl = document.createElement('p');
+                        bodyEl.className = 'project-main-body';
+                        bodyEl.textContent = mainDesc.body;
+                        mainDescriptionContainer.appendChild(bodyEl);
+                    }
+
+                    mainDescriptionContainer.style.display = 'flex';
+                } else {
+                    // Fallback: use old description field as main description
+                    if (project.description) {
+                        const bodyEl = document.createElement('p');
+                        bodyEl.className = 'project-main-body';
+                        bodyEl.textContent = project.description;
+                        mainDescriptionContainer.appendChild(bodyEl);
+                        mainDescriptionContainer.style.display = 'flex';
+                    } else {
+                        mainDescriptionContainer.style.display = 'none';
+                    }
+                }
+
+                // Populate Sections
+                const sectionsContainer = document.getElementById('projectSections');
+                sectionsContainer.innerHTML = '';
+
+                if (project.sections && Array.isArray(project.sections) && project.sections.length > 0) {
+                    project.sections.forEach((section, index) => {
+                        const sectionEl = document.createElement('div');
+                        sectionEl.className = 'project-section';
+
+                        // Create media container for photos and videos
+                        const hasPhotos = section.photos && section.photos.length > 0;
+                        const hasVideo = section.videoUrl;
+
+                        if (hasPhotos || hasVideo) {
+                            const mediaContainer = document.createElement('div');
+
+                            // If there's a video, show it full width
+                            if (hasVideo) {
+                                mediaContainer.className = 'section-photos single-photo';
+                                const videoDiv = document.createElement('div');
+                                videoDiv.className = 'section-photo';
+                                const video = document.createElement('video');
+                                video.src = section.videoUrl;
+                                video.controls = true;
+                                video.preload = 'metadata';
+                                video.style.width = '100%';
+                                video.style.height = '100%';
+                                video.style.objectFit = 'cover';
+                                videoDiv.appendChild(video);
+                                mediaContainer.appendChild(videoDiv);
+                            }
+                            // Otherwise show photos
+                            else if (hasPhotos) {
+                                mediaContainer.className = section.photos.length === 1
+                                    ? 'section-photos single-photo'
+                                    : 'section-photos double-photo';
+
+                                section.photos.forEach(photoUrl => {
+                                    const photoDiv = document.createElement('div');
+                                    photoDiv.className = 'section-photo';
+                                    const img = document.createElement('img');
+                                    img.src = photoUrl;
+                                    img.alt = section.title || `Section ${index + 1} photo`;
+                                    img.loading = 'lazy';
+                                    photoDiv.appendChild(img);
+                                    mediaContainer.appendChild(photoDiv);
+                                });
+                            }
+
+                            sectionEl.appendChild(mediaContainer);
+                        }
+
+                        // Create text container
+                        const textContainer = document.createElement('div');
+                        textContainer.className = 'section-text';
+
+                        // Add title if exists
+                        if (section.title) {
+                            const titleEl = document.createElement('h2');
+                            titleEl.className = 'section-title';
+                            titleEl.textContent = section.title;
+                            textContainer.appendChild(titleEl);
+                        }
+
+                        // Add body if exists
+                        if (section.body) {
+                            const bodyEl = document.createElement('p');
+                            bodyEl.className = 'section-body';
+                            bodyEl.textContent = section.body;
+                            textContainer.appendChild(bodyEl);
+                        }
+
+                        sectionEl.appendChild(textContainer);
+                        sectionsContainer.appendChild(sectionEl);
+                    });
+                    sectionsContainer.style.display = 'flex';
+                } else {
+                    sectionsContainer.style.display = 'none';
+                }
 
                 // Populate Gallery (remaining media items)
                 const gallery = document.getElementById('projectDetailGallery');
@@ -2995,7 +3280,19 @@ Debug Mode: Press 'D' to show camera position
                     const galleryItem = document.createElement('div');
                     galleryItem.className = 'gallery-item';
 
-                    if (item.type === 'youtube') {
+                    if (item.type === 'direct-video') {
+                        const video = document.createElement('video');
+                        video.src = item.url;
+                        video.muted = true;
+                        video.loop = true;
+                        video.preload = 'metadata';
+                        galleryItem.appendChild(video);
+
+                        // Click to open in lightbox (index + 1 because we skipped first)
+                        galleryItem.addEventListener('click', () => {
+                            this.openLightbox(mediaItems, index + 1);
+                        });
+                    } else if (item.type === 'youtube') {
                         const iframe = document.createElement('iframe');
                         iframe.src = `https://www.youtube.com/embed/${item.id}`;
                         iframe.setAttribute('frameborder', '0');
@@ -3179,7 +3476,7 @@ Debug Mode: Press 'D' to show camera position
                 content.innerHTML = '';
 
                 // Create media element
-                if (item.type === 'video') {
+                if (item.type === 'video' || item.type === 'direct-video') {
                     const video = document.createElement('video');
                     video.src = item.url;
                     video.controls = true;

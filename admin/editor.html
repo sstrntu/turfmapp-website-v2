@@ -298,6 +298,85 @@
             min-width: auto;
         }
 
+        .sections-container {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            background: #f8f9fa;
+            margin-bottom: 1rem;
+        }
+
+        .section-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .section-number {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .section-photos-container {
+            margin-bottom: 1rem;
+        }
+
+        .section-photos-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .section-photo-item {
+            position: relative;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+            aspect-ratio: 16 / 10;
+        }
+
+        .section-photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .section-photo-upload {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            aspect-ratio: 16 / 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .section-photo-upload:hover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+
         .upload-area {
             border: 2px dashed #dee2e6;
             border-radius: 8px;
@@ -684,10 +763,15 @@
                     under: 'Turfmapp', // Default value
                     service: '',
                     date: '',
-                    description: '',
+                    mainDescription: {
+                        title: '',
+                        body: ''
+                    },
+                    sections: [],
                     links: [],
                     uploadedMedia: [],
-                    youtube_url: ''
+                    youtube_url: '',
+                    directVideoUrl: ''
                 };
 
                 this.projects.push(project);
@@ -697,6 +781,21 @@
             removeProject(index) {
                 this.projects.splice(index, 1);
                 this.renderProjects();
+            }
+
+            updateProject(index, field, value) {
+                if (this.projects[index]) {
+                    this.projects[index][field] = value;
+                }
+            }
+
+            updateMainDescription(index, field, value) {
+                if (this.projects[index]) {
+                    if (!this.projects[index].mainDescription) {
+                        this.projects[index].mainDescription = { title: '', body: '' };
+                    }
+                    this.projects[index].mainDescription[field] = value;
+                }
             }
 
             renderProjects() {
@@ -743,9 +842,25 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Description</label>
-                            <textarea onchange="editor.updateProject(${index}, 'description', this.value)"
-                                      placeholder="Enter project description" rows="3">${this.escapeHtml(project.description || '')}</textarea>
+                            <label>Main Description Title</label>
+                            <input type="text" value="${this.escapeHtml(project.mainDescription?.title || '')}"
+                                   onchange="editor.updateMainDescription(${index}, 'title', this.value)"
+                                   placeholder="Enter main description title">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Main Description Body</label>
+                            <textarea onchange="editor.updateMainDescription(${index}, 'body', this.value)"
+                                      placeholder="Enter main description text" rows="4">${this.escapeHtml(project.mainDescription?.body || '')}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Project Sections</label>
+                            <div class="sections-container" id="projectSections${index}">
+                                ${this.renderSections(project, index)}
+                            </div>
+                            <button type="button" class="btn btn-secondary"
+                                    onclick="editor.addSection(${index})">+ Add Section</button>
                         </div>
                         
                         <div class="form-group">
@@ -811,6 +926,16 @@
                                 </div>
                             ` : ''}
                         </div>
+
+                        <div class="form-group">
+                            <label>Direct Video URL (Cloudflare R2, etc.)</label>
+                            <input type="url" value="${this.escapeHtml(project.directVideoUrl || '')}"
+                                   onchange="editor.updateProject(${index}, 'directVideoUrl', this.value)"
+                                   placeholder="https://your-r2-bucket.com/video.mp4">
+                            <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">
+                                Paste direct video URL from Cloudflare R2 or other sources (shown as main/hero media)
+                            </small>
+                        </div>
                     </div>
                 `).join('');
             }
@@ -837,6 +962,139 @@
             removeProjectLink(projectIndex, linkIndex) {
                 if (this.projects[projectIndex]) {
                     this.projects[projectIndex].links.splice(linkIndex, 1);
+                    this.renderProjects();
+                }
+            }
+
+            renderSections(project, projectIndex) {
+                const sections = project.sections || [];
+                if (sections.length === 0) {
+                    return '<p style="color: #666; text-align: center; padding: 1rem 0;">No sections yet. Click "Add Section" to create one.</p>';
+                }
+
+                return sections.map((section, sectionIndex) => `
+                    <div class="section-item">
+                        <div class="section-header">
+                            <span class="section-number">Section ${sectionIndex + 1}</span>
+                            <button type="button" class="btn btn-danger btn-small"
+                                    onclick="editor.removeSection(${projectIndex}, ${sectionIndex})">Remove Section</button>
+                        </div>
+
+                        <div class="section-photos-container">
+                            <label style="font-size: 14px; font-weight: 500; margin-bottom: 0.5rem; display: block;">Photos (1-2)</label>
+                            <div class="section-photos-grid">
+                                ${(section.photos || []).map((photo, photoIndex) => `
+                                    <div class="section-photo-item">
+                                        <img src="${this.escapeHtml(photo)}" alt="Section photo">
+                                        <button class="remove-btn" onclick="editor.removeSectionPhoto(${projectIndex}, ${sectionIndex}, ${photoIndex})" title="Remove">×</button>
+                                    </div>
+                                `).join('')}
+                                ${(section.photos || []).length < 2 ? `
+                                    <div class="section-photo-upload" onclick="document.getElementById('sectionPhoto_${projectIndex}_${sectionIndex}').click()">
+                                        <span>+ Add Photo</span>
+                                        <input type="file" id="sectionPhoto_${projectIndex}_${sectionIndex}"
+                                               style="display: none;" accept="image/*"
+                                               onchange="editor.handleSectionPhotoUpload(${projectIndex}, ${sectionIndex}, this.files[0])">
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 0.75rem;">
+                            <label style="font-size: 14px; font-weight: 500; margin-bottom: 0.5rem; display: block;">Video URL (Optional - Cloudflare R2, direct link)</label>
+                            <input type="url" value="${this.escapeHtml(section.videoUrl || '')}"
+                                   onchange="editor.updateSection(${projectIndex}, ${sectionIndex}, 'videoUrl', this.value)"
+                                   placeholder="https://your-r2-bucket.com/video.mp4"
+                                   style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 4px;">
+                            <small style="color: #666; font-size: 12px; margin-top: 0.25rem; display: block;">Paste direct video URL from Cloudflare R2 or other sources</small>
+                        </div>
+
+                        <div style="margin-bottom: 0.75rem;">
+                            <label style="font-size: 14px; font-weight: 500; margin-bottom: 0.5rem; display: block;">Section Title</label>
+                            <input type="text" value="${this.escapeHtml(section.title || '')}"
+                                   onchange="editor.updateSection(${projectIndex}, ${sectionIndex}, 'title', this.value)"
+                                   placeholder="Enter section title"
+                                   style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 4px;">
+                        </div>
+
+                        <div>
+                            <label style="font-size: 14px; font-weight: 500; margin-bottom: 0.5rem; display: block;">Section Body</label>
+                            <textarea onchange="editor.updateSection(${projectIndex}, ${sectionIndex}, 'body', this.value)"
+                                      placeholder="Enter section body text" rows="4"
+                                      style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 4px; resize: vertical;">${this.escapeHtml(section.body || '')}</textarea>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            addSection(projectIndex) {
+                if (this.projects[projectIndex]) {
+                    if (!this.projects[projectIndex].sections) {
+                        this.projects[projectIndex].sections = [];
+                    }
+                    this.projects[projectIndex].sections.push({
+                        photos: [],
+                        title: '',
+                        body: ''
+                    });
+                    this.renderProjects();
+                }
+            }
+
+            removeSection(projectIndex, sectionIndex) {
+                if (this.projects[projectIndex] && this.projects[projectIndex].sections) {
+                    this.projects[projectIndex].sections.splice(sectionIndex, 1);
+                    this.renderProjects();
+                }
+            }
+
+            updateSection(projectIndex, sectionIndex, field, value) {
+                if (this.projects[projectIndex] && this.projects[projectIndex].sections && this.projects[projectIndex].sections[sectionIndex]) {
+                    this.projects[projectIndex].sections[sectionIndex][field] = value;
+                }
+            }
+
+            async handleSectionPhotoUpload(projectIndex, sectionIndex, file) {
+                if (!file || !file.type.startsWith('image/')) {
+                    this.showAlert('Please select an image file', 'error');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('files', file);
+
+                try {
+                    const response = await fetch('/api/upload/multiple', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (!data.success) {
+                        throw new Error(data.message || 'Upload failed');
+                    }
+
+                    // Add photo URL to section
+                    if (!this.projects[projectIndex].sections[sectionIndex].photos) {
+                        this.projects[projectIndex].sections[sectionIndex].photos = [];
+                    }
+
+                    const uploadedFile = data.data[0];
+                    const photoUrl = uploadedFile.optimized?.url || uploadedFile.original.url;
+                    this.projects[projectIndex].sections[sectionIndex].photos.push(photoUrl);
+
+                    this.renderProjects();
+                    this.showAlert('Photo uploaded successfully!', 'success');
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    this.showAlert(error.message || 'Upload failed', 'error');
+                }
+            }
+
+            removeSectionPhoto(projectIndex, sectionIndex, photoIndex) {
+                if (this.projects[projectIndex] && this.projects[projectIndex].sections && this.projects[projectIndex].sections[sectionIndex]) {
+                    this.projects[projectIndex].sections[sectionIndex].photos.splice(photoIndex, 1);
                     this.renderProjects();
                 }
             }
@@ -1314,14 +1572,12 @@
                         const serviceInput = inputs[1]; // Second text input is service
                         const dateInput = inputs[2]; // Third text input is date
                         const underSelect = projectElement.querySelector('select');
-                        const descriptionInput = projectElement.querySelector('textarea');
                         const youtubeInput = projectElement.querySelector('input[type="url"]'); // YouTube URL input
 
                         const title = titleInput ? titleInput.value.trim() : '';
                         const under = underSelect ? underSelect.value : 'Turfmapp';
                         const service = serviceInput ? serviceInput.value.trim() : '';
                         const date = dateInput ? dateInput.value.trim() : '';
-                        const description = descriptionInput ? descriptionInput.value.trim() : '';
                         const youtube_url = youtubeInput ? youtubeInput.value.trim() : '';
 
                         if (!title) {
@@ -1359,17 +1615,28 @@
                         const firstImage = projectMedia.find(m => m.original.mimetype.startsWith('image/'));
                         const firstVideo = projectMedia.find(m => m.original.mimetype.startsWith('video/'));
 
+                        // Get sections for this project
+                        const sections = this.projects[projectIndex] ? this.projects[projectIndex].sections || [] : [];
+
+                        // Get main description for this project
+                        const mainDescription = this.projects[projectIndex] ? this.projects[projectIndex].mainDescription || { title: '', body: '' } : { title: '', body: '' };
+
+                        // Get direct video URL
+                        const directVideoUrl = this.projects[projectIndex] ? this.projects[projectIndex].directVideoUrl || '' : '';
+
                         projects.push({
                             title: title,
                             under: under,
                             service: service,
                             date: date,
-                            description: description,
+                            mainDescription: mainDescription,
+                            sections: sections,
                             links: links,
                             image_url: firstImage?.optimized?.url || firstImage?.original.url || '',
                             video_url: firstVideo?.original.url || '',
                             media: media,  // Store all media
-                            youtube_url: youtube_url
+                            youtube_url: youtube_url,
+                            directVideoUrl: directVideoUrl
                         });
                     }
 
@@ -1529,10 +1796,13 @@
                             under: project.under || 'Turfmapp',
                             service: project.service || '',
                             date: project.date || '',
+                            mainDescription: project.mainDescription || { title: '', body: '' },
+                            sections: project.sections || [],
                             description: project.description || '',
                             links: project.links || [],
                             uploadedMedia: [],
-                            youtube_url: project.youtube_url || ''
+                            youtube_url: project.youtube_url || '',
+                            directVideoUrl: project.directVideoUrl || ''
                         }));
                         
                         // Add existing media to projects if available
@@ -1625,7 +1895,11 @@
                     
                     const tooltip = data.data;
                     this.tooltipName = tooltip.name;
-                    this.projects = [...tooltip.projects];
+                    // Ensure all projects have a sections array
+                    this.projects = tooltip.projects.map(project => ({
+                        ...project,
+                        sections: project.sections || []
+                    }));
                     this.coordinates = { ...tooltip.coordinates };
                     
                     document.getElementById('tooltipName').value = this.tooltipName;
